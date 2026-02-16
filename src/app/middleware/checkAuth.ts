@@ -26,7 +26,7 @@ export const checkAuth = (...roles: Role[]) => {
             }
 
             req.user = {
-                id: session.user.id,
+                userId: session.user.id,
                 email: session.user.email,
                 name: session.user.name,
                 role: session.user.role as string,
