@@ -1,0 +1,16 @@
+model ProviderProfile {
+    id             String   @id @default(uuid())
+    userId         String   @unique
+    user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    restaurantName String
+    address        String?
+    bio            String?
+    cuisineType    String?
+    rating         Float    @default(0)
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+    meals          Meal[]
+    orders         Order[]
+
+    @@map("provider_profile")
+}

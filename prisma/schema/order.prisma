@@ -1,0 +1,13 @@
+model Order {
+    id         String          @id @default(uuid())
+    userId     String
+    user       User            @relation(fields: [userId], references: [id])
+    providerId String
+    provider   ProviderProfile @relation(fields: [providerId], references: [id])
+    totalPrice Float
+    status     OrderStatus     @default(PLACED)
+    createdAt  DateTime        @default(now())
+    updatedAt  DateTime        @updatedAt
+
+    @@map("order")
+}
