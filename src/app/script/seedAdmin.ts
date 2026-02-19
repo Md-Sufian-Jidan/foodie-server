@@ -34,10 +34,10 @@ async function seedAdmin() {
                     origin: envVars.BETTER_AUTH_URL!,
                 },
                 body: JSON.stringify({
-                    name: "Admin",
+                    name: adminData.name,
                     email: adminData.email,
                     password: adminData.password,
-                    role: Role.ADMIN,
+                    role: adminData.role,
                 }),
             }
         );

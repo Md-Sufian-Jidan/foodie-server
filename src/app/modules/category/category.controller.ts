@@ -44,12 +44,11 @@ const getCategoryById = catchAsync(
 const deleteCategory = catchAsync(
     async (req, res) => {
         const { id } = req.params;
-        const result = await CategoryService.deleteCategory(id as string);
+        await CategoryService.deleteCategory(id as string);
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
             message: "Category deleted successfully",
-            data: result
         });
     }
 );
