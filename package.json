@@ -11,6 +11,7 @@
     "studio": "prisma studio",
     "push": "prisma db push",
     "pull": "prisma db pull",
+    "lint": "npx eslint /src/**/*",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -18,11 +19,15 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.2.3",
+    "@types/nodemailer": "^7.0.10",
     "@types/pg": "^8.16.0",
+    "eslint": "^10.0.0",
     "prisma": "^7.4.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.56.0"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.4.0",
@@ -37,6 +42,7 @@
     "express": "^5.2.1",
     "http-status": "^2.1.0",
     "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^8.0.1",
     "pg": "^8.18.0",
     "zod": "^4.3.6"
   }

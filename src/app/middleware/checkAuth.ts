@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
-import { Role } from "../../../prisma/generated/prisma/enums";
 import { auth } from '../lib/auth'
 import status from "http-status";
+import { Role } from "../../generated/prisma/enums";
 
 export const checkAuth = (...roles: Role[]) => {
     return async (req: Request, res: Response, next: NextFunction) => {
@@ -47,3 +47,4 @@ export const checkAuth = (...roles: Role[]) => {
 
     }
 };
+

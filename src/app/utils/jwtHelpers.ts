@@ -1,4 +1,4 @@
-import { envVars } from "../../config/env";
+import { envVars } from "../config/env";
 import jwt, { JwtPayload } from "jsonwebtoken";
 
 const createToken = (payload: any) => {

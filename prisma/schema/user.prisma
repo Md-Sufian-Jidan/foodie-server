@@ -5,9 +5,6 @@ model User {
     emailVerified      Boolean    @default(false)
     role               Role       @default(CUSTOMER)
     status             UserStatus @default(ACTIVE)
-    needPasswordChange Boolean    @default(false)
-    isDeleted          Boolean    @default(false)
-    deletedAt          DateTime?
     image              String?
     createdAt          DateTime   @default(now())
     updatedAt          DateTime   @updatedAt
