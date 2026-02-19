@@ -8,7 +8,7 @@ const createCategory = catchAsync(
         const payload = req.body;
         const result = await CategoryService.createCategory(payload);
         sendResponse(res, {
-            statusCode: status.OK,
+            statusCode: status.CREATED,
             success: true,
             message: "Category created successfully",
             data: result
@@ -46,7 +46,7 @@ const deleteCategory = catchAsync(
         const { id } = req.params;
         await CategoryService.deleteCategory(id as string);
         sendResponse(res, {
-            statusCode: status.OK,
+            statusCode: status.NO_CONTENT,
             success: true,
             message: "Category deleted successfully",
         });

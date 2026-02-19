@@ -17,8 +17,8 @@ const getAllUsersFromDB = catchAsync(async (req: Request, res: Response) => {
 
 const updateStatusFromDB = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { status } = req.body;
-    const result = await AdminServices.updateStatus(id as string, status as UserStatus);
+    const { status: UpdatedUserStatus } = req.body;
+    const result = await AdminServices.updateStatus(id as string, UpdatedUserStatus as UserStatus);
     sendResponse(res, {
         statusCode: status.OK,
         success: true,

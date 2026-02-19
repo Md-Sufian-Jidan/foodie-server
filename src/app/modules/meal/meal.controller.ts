@@ -9,7 +9,7 @@ const createMealIntoDB = catchAsync(
         const payload = req.body;
         const result = await MealServices.createMeal(payload);
         sendResponse(res, {
-            statusCode: status.OK,
+            statusCode: status.CREATED,
             success: true,
             message: "Meal created successfully",
             data: result

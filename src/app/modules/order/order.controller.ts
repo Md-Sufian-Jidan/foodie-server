@@ -6,16 +6,19 @@ import { catchAsync } from "../../shared/catchAsync";
 
 const createOrderIntoDB = catchAsync(
     async (req: Request, res: Response) => {
-        const payload = req.body
+        const payload = req.body;
+
         const result = await OrderServices.createOrder(payload);
+
         sendResponse(res, {
-            statusCode: status.OK,
+            statusCode: status.CREATED,
             success: true,
             message: "Order created successfully",
-            data: result
+            data: result,
         });
     }
 );
+
 
 const getAllOrdersFromDB = catchAsync(
     async (req: Request, res: Response) => {
