@@ -6,7 +6,7 @@ model Category {
     updatedAt DateTime @updatedAt
     meals     Meal[]
 
-    @@map("category")
+    @@map("categories")
 }
 
 model Meal {
@@ -23,5 +23,5 @@ model Meal {
     updatedAt   DateTime        @updatedAt
     reviews     Review[]
 
-    @@map("meal")
+    @@map("meals")
 }

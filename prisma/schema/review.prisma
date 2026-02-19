@@ -9,5 +9,5 @@ model Review {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    @@map("review")
+    @@map("reviews")
 }

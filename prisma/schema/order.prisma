@@ -9,5 +9,5 @@ model Order {
     createdAt  DateTime        @default(now())
     updatedAt  DateTime        @updatedAt
 
-    @@map("order")
+    @@map("orders")
 }

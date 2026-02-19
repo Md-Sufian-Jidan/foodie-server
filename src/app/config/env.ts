@@ -54,7 +54,7 @@ const loadEnvVariable = (): envConfig => {
         APP_PASS: process.env.APP_PASS as string,
         APP_USER: process.env.APP_USER as string,
         ADMIN_EMAIL: process.env.ADMIN_EMAIL as string,
-        ADMIN_PASSWORD: process.env.GOOGLE_CLIENT_SECRET as string,
+        ADMIN_PASSWORD: process.env.ADMIN_PASSWORD as string,
     };
 };
 

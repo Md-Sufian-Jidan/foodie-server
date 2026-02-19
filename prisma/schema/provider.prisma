@@ -12,5 +12,5 @@ model ProviderProfile {
     meals          Meal[]
     orders         Order[]
 
-    @@map("provider_profile")
+    @@map("providerProfiles")
 }
