@@ -4,6 +4,7 @@ model Category {
     image     String?
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
     meals     Meal[]
 
     @@map("categories")
@@ -15,12 +16,18 @@ model Meal {
     description String?
     price       Float
     image       String?
+
     categoryId  String
     category    Category        @relation(fields: [categoryId], references: [id])
+
     providerId  String
     provider    ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
+
+    orders      Order[]
+
     createdAt   DateTime        @default(now())
     updatedAt   DateTime        @updatedAt
+
     reviews     Review[]
 
     @@map("meals")
