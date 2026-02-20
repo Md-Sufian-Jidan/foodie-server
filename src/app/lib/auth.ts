@@ -78,7 +78,7 @@ export const auth = betterAuth({
 <body>
   <div class="container">
     <div class="header">
-      <h1>Jj Food<span>Hub</span></h1>
+      <h1>FOODIE</h1>
     </div>
 
     <div class="content">
@@ -104,12 +104,12 @@ export const auth = betterAuth({
 
       <p style="margin-top: 30px; font-size: 14px;">
         Stay fresh,<br />
-        <strong>The Jj FoodHub Team</strong>
+        <strong>The FOODIE Team</strong>
       </p>
     </div>
 
     <div class="footer">
-      © ${new Date().getFullYear()} Jj FoodHub. Crafted for gourmet lovers.<br/>
+      © ${new Date().getFullYear()} FOODIE Crafted for gourmet lovers.<br/>
       123 Gourmet Ave, Culinary District, NY
     </div>
   </div>

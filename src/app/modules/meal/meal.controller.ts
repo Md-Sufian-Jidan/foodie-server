@@ -19,7 +19,8 @@ const createMealIntoDB = catchAsync(
 
 const getAllMealsFromDB = catchAsync(
     async (req: Request, res: Response) => {
-        const result = await MealServices.getAllMeals();
+        console.log(req.query);
+        const result = await MealServices.getAllMeals(req.query);
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
@@ -47,7 +48,7 @@ const deleteMealFromDB = catchAsync(
         const { id } = req.params;
         await MealServices.deleteMeal(id as string);
         sendResponse(res, {
-            statusCode: status.OK,
+            statusCode: status.NO_CONTENT,
             success: true,
             message: "Meal deleted successfully",
         });

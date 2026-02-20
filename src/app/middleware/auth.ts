@@ -47,7 +47,7 @@ export const auth = (...roles: Role[]) => {
             next()
         } catch (err: any) {
             return sendResponse(res, {
-                statusCode: httpStatus.INTERNAL_SERVER_ERROR,
+                statusCode: status.INTERNAL_SERVER_ERROR,
                 success: false,
                 message: err.message || "Something went wrong while authenticating the user.",
                 data: err,

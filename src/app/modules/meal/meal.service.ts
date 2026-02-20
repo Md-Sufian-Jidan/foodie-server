@@ -39,9 +39,80 @@ const createMeal = async (payload: IMealData) => {
     return result;
 };
 
-const getAllMeals = async () => {
-    const result = await prisma.meal.findMany();
-    return result;
+// const getAllMeals = async () => {
+//     const result = await prisma.meal.findMany();
+//     return result;
+// };
+
+const getAllMeals = async (query: any) => {
+    const {
+        search,
+        minPrice,
+        maxPrice,
+        categoryId,
+        providerId,
+        sortBy = "createdAt",
+        sortOrder = "desc",
+        page = 1,
+        limit = 10,
+    } = query;
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+    const whereCondition: any = {};
+
+    // 🔎 Search by name
+    if (search) {
+        whereCondition.name = {
+            contains: search,
+            mode: "insensitive",
+        };
+    }
+
+    // 💰 Price filter
+    if (minPrice || maxPrice) {
+        whereCondition.price = {
+            gte: minPrice ? Number(minPrice) : undefined,
+            lte: maxPrice ? Number(maxPrice) : undefined,
+        };
+    }
+
+    // 🏷 Category filter
+    if (categoryId) {
+        whereCondition.categoryId = categoryId;
+    }
+
+    // 👤 Provider filter
+    if (providerId) {
+        whereCondition.providerId = providerId;
+    }
+
+    const result = await prisma.meal.findMany({
+        where: whereCondition,
+        skip,
+        take: Number(limit),
+        orderBy: {
+            [sortBy]: sortOrder,
+        },
+        include: {
+            category: true,
+            provider: true,
+            reviews: true,
+        },
+    });
+
+    const total = await prisma.meal.count({
+        where: whereCondition,
+    });
+
+    return {
+        meta: {
+            page: Number(page),
+            limit: Number(limit),
+            total,
+        },
+        data: result,
+    };
 };
 
 const getSingleMeal = async (id: string) => {

@@ -7,10 +7,13 @@ model ProviderProfile {
     bio            String?
     cuisineType    String?
     rating         Float    @default(0)
+
     createdAt      DateTime @default(now())
     updatedAt      DateTime @updatedAt
+    
     meals          Meal[]
     orders         Order[]
 
     @@map("providerProfiles")
+    @@index([userId])
 }

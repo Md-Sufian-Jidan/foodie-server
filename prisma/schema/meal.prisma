@@ -7,6 +7,7 @@ model Category {
 
     meals     Meal[]
 
+    @@index([name])
     @@map("categories")
 }
 
@@ -30,5 +31,7 @@ model Meal {
 
     reviews     Review[]
 
+    @@index([categoryId])
+    @@index([providerId])
     @@map("meals")
 }

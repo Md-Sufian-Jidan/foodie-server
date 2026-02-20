@@ -15,6 +15,7 @@ model User {
     reviews         Review[]
 
     @@unique([email])
+    @@index([email])
     @@map("users")
 }
 
