@@ -19,10 +19,13 @@ const createOrderIntoDB = catchAsync(
     }
 );
 
-
 const getAllOrdersFromDB = catchAsync(
     async (req: Request, res: Response) => {
-        const result = await OrderServices.getAllOrders();
+        const userId = req.user?.userId;
+        if (!userId) {
+            throw new Error("User not found");
+        }
+        const result = await OrderServices.getAllOrders(userId);
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
@@ -35,16 +38,20 @@ const getAllOrdersFromDB = catchAsync(
 const getSingleOrderFromDB = catchAsync(
     async (req: Request, res: Response) => {
         const { id } = req.params;
-        const result = await OrderServices.getSingleOrder(id as string);
+
+        const result = await OrderServices.getSingleOrder(
+            id as string,
+            req.user
+        );
+
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
             message: "Order fetched successfully",
-            data: result
+            data: result,
         });
     }
 );
-
 export const OrderController = {
     createOrderIntoDB,
     getAllOrdersFromDB,

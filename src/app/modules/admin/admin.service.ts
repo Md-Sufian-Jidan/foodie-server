@@ -1,7 +1,7 @@
 import { UserStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma"
 
-const getAllusers = async () => {
+const getAllUsers = async () => {
     const users = await prisma.user.findMany();
 
     const result = users.filter((res) => res.status !== UserStatus.DELETED && res.status !== UserStatus.BLOCKED);
@@ -9,7 +9,7 @@ const getAllusers = async () => {
     return result;
 };
 
-const updateStatus = async (id: string, status: UserStatus) => {
+const updateUserStatus = async (id: string, status: UserStatus) => {
     const isUserExists = await prisma.user.findUnique({
         where: {
             id
@@ -35,6 +35,6 @@ const updateStatus = async (id: string, status: UserStatus) => {
 };
 
 export const AdminServices = {
-    getAllusers,
-    updateStatus
+    getAllUsers,
+    updateUserStatus
 };

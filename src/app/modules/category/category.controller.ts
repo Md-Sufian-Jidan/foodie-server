@@ -2,11 +2,12 @@ import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
 import { CategoryService } from "./category.services";
+import { Request, Response } from "express";
 
 const createCategory = catchAsync(
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         const payload = req.body;
-        const result = await CategoryService.createCategory(payload);
+        const result = await CategoryService.createCategoryIntoDB(payload);
         sendResponse(res, {
             statusCode: status.CREATED,
             success: true,
@@ -17,8 +18,8 @@ const createCategory = catchAsync(
 );
 
 const getAllCategories = catchAsync(
-    async (req, res) => {
-        const result = await CategoryService.getAllCategories();
+    async (req: Request, res: Response) => {
+        const result = await CategoryService.getAllCategoriesFromDB();
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
@@ -29,7 +30,7 @@ const getAllCategories = catchAsync(
 );
 
 const getCategoryById = catchAsync(
-    async (req, res) => {
+    async (req: Request, res: Response) => {
         const { id } = req.params;
         const result = await CategoryService.getCategoryById(id as string);
         sendResponse(res, {
@@ -41,14 +42,29 @@ const getCategoryById = catchAsync(
     }
 );
 
-const deleteCategory = catchAsync(
-    async (req, res) => {
+const updateCategory = catchAsync(
+    async (req: Request, res: Response) => {
         const { id } = req.params;
-        await CategoryService.deleteCategory(id as string);
+        const payload = req.body;
+        const result = await CategoryService.updateCategoryIntoDB(id as string, payload);
         sendResponse(res, {
-            statusCode: status.NO_CONTENT,
+            statusCode: status.OK,
+            success: true,
+            message: "Category updated successfully",
+            data: result
+        });
+    }
+)
+
+const deleteCategory = catchAsync(
+    async (req: Request, res: Response) => {
+        const { id } = req.params;
+        await CategoryService.deleteCategoryFromDB(id as string);
+        sendResponse(res, {
+            statusCode: status.OK,
             success: true,
             message: "Category deleted successfully",
+            data: null
         });
     }
 );
@@ -57,5 +73,6 @@ export const CategoryController = {
     createCategory,
     getAllCategories,
     getCategoryById,
+    updateCategory,
     deleteCategory
 };

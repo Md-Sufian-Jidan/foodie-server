@@ -14,17 +14,19 @@ const transporter = nodemailer.createTransport({
     pass: envVars.APP_PASS,
   },
 });
+
 export const auth = betterAuth({
-  baseURL: envVars.BETTER_AUTH_URL,
+  baseURL: envVars.BETTER_AUTH_URL!,
   secret: envVars.BETTER_AUTH_SECRET,
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
-  trustedOrigins: [envVars.FRONTEND_URL],
+  trustedOrigins: [envVars.FRONTEND_URL!],
 
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
+    autoSignIn: false,
     requireEmailVerification: true,
   },
 
@@ -40,13 +42,18 @@ export const auth = betterAuth({
         type: "string",
         required: true,
         defaultValue: UserStatus.ACTIVE
+      },
+
+      phone: {
+        type: "string",
+        required: false,
       }
     }
   },
 
   emailVerification: {
     sendOnSignUp: true,
-    autoSignInAfterVerification: true,
+    autoSignInAfterVerification: false,
 
     sendVerificationEmail: async ({ user, url, token }) => {
       try {

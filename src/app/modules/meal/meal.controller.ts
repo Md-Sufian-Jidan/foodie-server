@@ -1,26 +1,36 @@
 import status from "http-status";
 import { catchAsync } from "../../shared/catchAsync";
 import { sendResponse } from "../../shared/sendResponse";
-import { MealServices } from "./meal.service";
+import { MealService } from "./meal.service";
 import { Request, Response } from "express";
+import paginationSortingHelper from "../../helpers/PaginationSortingHelper";
+import { OrderStatus } from "../../../generated/prisma/enums";
 
-const createMealIntoDB = catchAsync(
+const createMeal = catchAsync(
     async (req: Request, res: Response) => {
-        const payload = req.body;
-        const result = await MealServices.createMeal(payload);
+        const userId = req.user?.userId as string;
+        const result = await MealService.createMealIntoDB({ ...req.body, userId });
         sendResponse(res, {
             statusCode: status.CREATED,
             success: true,
             message: "Meal created successfully",
             data: result
         });
-    }
+    },
 );
 
-const getAllMealsFromDB = catchAsync(
+const getAllMeals = catchAsync(
     async (req: Request, res: Response) => {
-        console.log(req.query);
-        const result = await MealServices.getAllMeals(req.query);
+        const payload = req.query;
+        const { page, limit, skip, sortBy, sortOrder } = paginationSortingHelper(payload);
+        const result = await MealService.getAllMealsFromDB({
+            ...payload,
+            page,
+            limit,
+            skip,
+            ...(sortBy && { sortBy }),
+            ...(sortOrder && { sortOrder }),
+        });
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
@@ -30,10 +40,10 @@ const getAllMealsFromDB = catchAsync(
     }
 );
 
-const getSingleMealFromDB = catchAsync(
+const getSingleMeal = catchAsync(
     async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const result = await MealServices.getSingleMeal(id as string);
+        const mealId = req.params.id as string;
+        const result = await MealService.getSingleMealFromDB(mealId);
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
@@ -43,23 +53,24 @@ const getSingleMealFromDB = catchAsync(
     }
 );
 
-const deleteMealFromDB = catchAsync(
+const getProviderMeals = catchAsync(
     async (req: Request, res: Response) => {
-        const { id } = req.params;
-        await MealServices.deleteMeal(id as string);
+        const userId = req.user?.userId as string;
+        const result = await MealService.getProviderMealsFromDB(userId);
         sendResponse(res, {
-            statusCode: status.NO_CONTENT,
+            statusCode: status.OK,
             success: true,
-            message: "Meal deleted successfully",
+            message: "Provider meals fetched successfully",
+            data: result
         });
     }
 );
 
-const updateMealIntoDB = catchAsync(
+const updateMeal = catchAsync(
     async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const payload = req.body;
-        const result = await MealServices.updateMeal(payload, id as string);
+        const mealId = req.params.id as string;
+        const userId = req.user?.userId as string;
+        const result = await MealService.updateMealIntoDB(mealId, userId, req.body);
         sendResponse(res, {
             statusCode: status.OK,
             success: true,
@@ -69,10 +80,104 @@ const updateMealIntoDB = catchAsync(
     }
 );
 
+const deleteMeal = catchAsync(
+    async (req: Request, res: Response) => {
+        const mealId = req.params.id as string;
+        const userId = req.user?.userId as string;
+        const result = await MealService.deleteMealFromDB(mealId, userId);
+        sendResponse(res, {
+            statusCode: status.OK,
+            success: true,
+            message: "Meal deleted successfully",
+            data: result
+        });
+    }
+);
+
+const getProviderOrders = catchAsync(
+    async (req: Request, res: Response) => {
+        const userId = req.user?.userId as string;
+        const result = await MealService.getProviderOrdersFromDB(userId);
+        sendResponse(res, {
+            statusCode: status.OK,
+            success: true,
+            message: "Provider orders fetched successfully",
+            data: result
+        });
+    }
+);
+
+const updateOrderStatus = catchAsync(
+    async (req: Request, res: Response) => {
+        const userId = req.user?.userId as string;
+        const orderId = req.params.id as string;
+        const orderStatus = req.body.status as OrderStatus;
+        const result = await MealService.updateOrderStatusIntoDB(orderId, userId, orderStatus);
+        sendResponse(res, {
+            statusCode: status.OK,
+            success: true,
+            message: "Order status updated successfully",
+            data: result
+        });
+    }
+);
+
+const getMealTypes = catchAsync(
+    async (req: Request, res: Response) => {
+        const result = await MealService.getMealTypesFromDB();
+        sendResponse(res, {
+            statusCode: status.OK,
+            success: true,
+            message: "Meal types fetched successfully",
+            data: result
+        });
+    }
+);
+
+const getDietaryOptions = catchAsync(
+    async (req: Request, res: Response) => {
+        const result = await MealService.dietaryOptionsFromDB();
+        sendResponse(res, {
+            statusCode: status.OK,
+            success: true,
+            message: "Dietary options fetched successfully",
+            data: result
+        });
+    }
+);
+
+const getCuisineOptions = catchAsync(
+    async (req: Request, res: Response) => {
+        const result = await MealService.getCusineOptionsFromDB();
+        sendResponse(res, {
+            statusCode: status.OK,
+            success: true,
+            message: "Cuisine options fetched successfully",
+            data: result
+        });
+    }
+);
+
+const getPopularMeals = catchAsync(
+    async (req: Request, res: Response) => {
+        const result = await MealService.getPopularMealsFromDB();
+        sendResponse(res, {
+            statusCode: status.OK,
+            success: true,
+            message: "Popular meals fetched successfully",
+            data: result
+        });
+    }
+);
+
 export const MealController = {
-    createMealIntoDB,
-    getAllMealsFromDB,
-    getSingleMealFromDB,
-    deleteMealFromDB,
-    updateMealIntoDB
+    getProviderMeals,
+    updateMeal,
+    deleteMeal,
+    getProviderOrders,
+    updateOrderStatus,
+    getMealTypes,
+    getDietaryOptions,
+    getCuisineOptions,
+    getPopularMeals,
 }

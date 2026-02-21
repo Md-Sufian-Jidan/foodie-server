@@ -1,15 +1,15 @@
 model Review {
-    id        String   @id @default(uuid())
-    rating    Int
-    comment   String?
-    userId    String
-    user      User     @relation(fields: [userId], references: [id])
-    mealId    String
-    meal      Meal     @relation(fields: [mealId], references: [id])
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+  id      String  @id @default(uuid())
+  userId  String
+  mealId  String
+  rating  Int
+  comment String?
 
-    @@index([userId])
-    @@index([mealId])
-    @@map("reviews")
+  user User @relation(fields: [userId], references: [id])
+  meal Meal @relation(fields: [mealId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, mealId], name: "unique_user_meal_review")
 }

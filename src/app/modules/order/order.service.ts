@@ -1,8 +1,14 @@
 import { prisma } from "../../lib/prisma";
 import { IOrderData } from "./order.interface";
 
+// Orders
+// Method	Endpoint	Description
+// POST	/api/orders	Create new order
+// GET	/api/orders	Get user's orders
+// GET	/api/orders/:id	Get order details
+
 const createOrder = async (payload: IOrderData) => {
-    const { mealId, quantity, userId, providerId, totalPrice, status } = payload;
+    const { mealId } = payload;
     const meal = await prisma.meal.findUnique({
         where: {
             id: mealId
@@ -11,42 +17,55 @@ const createOrder = async (payload: IOrderData) => {
     if (!meal) {
         throw new Error("Meal not found");
     }
-    // const result = await prisma.order.create({
-    //     data: {
-    //         userId,
-    //         mealId,
-    //         quantity,
-    //         providerId,
-    //         totalPrice: meal.price * quantity,
-    //         status
-    //     }
-    // });
 
-    return;
-};
-
-const getAllOrders = async () => {
-    const result = await prisma.order.findMany();
+    const result = await prisma.order.create({
+        data: payload,
+    });
     return result;
 };
 
-const getSingleOrder = async (id: string) => {
+// const getAllOrders = async () => {
+//     const result = await prisma.order.findMany();
+//     return result;
+// };
 
-    const isExistOrder = await prisma.order.findUnique({
+const getAllOrders = async (userId: string) => {
+    const result = await prisma.order.findMany({
         where: {
-            id
-        }
+            userId
+        },
+        include: {
+            meal: true,
+            provider: true,
+        },
+        orderBy: {
+            createdAt: "desc",
+        },
     });
-    if (!isExistOrder) {
+
+    return result;
+};
+
+const getSingleOrder = async (id: string, user: any) => {
+    const order = await prisma.order.findUnique({
+        where: { id },
+        include: {
+            meal: true,
+            provider: true,
+            user: true,
+        },
+    });
+
+    if (!order) {
         throw new Error("Order not found");
     }
 
-    const result = await prisma.order.findUnique({
-        where: {
-            id
-        }
-    });
-    return result;
+    // যদি admin না হয়, তাহলে নিজের order কিনা check করো
+    if (user.role !== "ADMIN" && order.userId !== user.userId) {
+        throw new Error("You are not authorized to view this order");
+    }
+
+    return order;
 };
 
 export const OrderServices = {

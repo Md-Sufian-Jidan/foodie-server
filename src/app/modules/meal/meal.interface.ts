@@ -1,23 +1,64 @@
-//  id          String          @id @default(uuid())
-//     name        String
-//     description String?
-//     price       Float
-//     image       String?
-//     categoryId  String
-//     category    Category        @relation(fields: [categoryId], references: [id])
-//     providerId  String
-//     provider    ProviderProfile @relation(fields: [providerId], references: [id], onDelete: Cascade)
-//     createdAt   DateTime        @default(now())
-//     updatedAt   DateTime        @updatedAt
-//     reviews     Review[]
-
-export interface IMealData {
+export interface IMeal {
     name: string;
-    description: string;
+    calories: number;
+    ingredients: string[];
+    description?: string | undefined;
     price: number;
-    image: string;
+    image?: string | undefined;
+    isAvailable: boolean;
     categoryId: string;
     providerId: string;
-    createdAt: Date;
-    updatedAt: Date;
+    dietary: string[];
+    cuisine: string;
+    mealType: string;
+    spiceLevel: string;
+    id?: string;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+// update meal payload
+
+export type UpdateMealPayload = {
+    name?: string;
+    description?: string;
+    price?: number;
+    image?: string;
+    isAvailable?: boolean;
+    calories?: number;
+    ingredients?: string[];
+    categoryId?: string;
+    dietary?: string[];
+    cuisine?: string;
+    mealType?: string;
+    spiceLevel?: string;
+};
+
+// filter payload
+
+export interface MealFilterPayload {
+    search?: string;
+    dietary?: string;
+    cuisine?: string;
+    mealType?: string;
+    spiceLevel?: string;
+    page?: number;
+    limit?: number;
+    skip?: number;
+    totalPages?: number;
+    totalItems?: number;
+    sortBy?: "price" | "calories" | "name" | "createdAt";
+    sortOrder?: "asc" | "desc";
+}
+
+// meal list response
+
+export interface MealListResponse {
+    data: IMeal[];
+    pagination: {
+        total: number;
+        page?: number;
+        limit?: number;
+        totalPages?: number;
+    };
 }

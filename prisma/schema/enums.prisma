@@ -1,19 +1,25 @@
 enum Role {
   ADMIN
-PROVIDER
+  PROVIDER
   CUSTOMER
 }
 
 enum UserStatus {
   ACTIVE
+  INACTIVE
   BLOCKED
   DELETED
 }
 
 enum OrderStatus {
-  PLACED
-  PREPARING
-  READY
+  PENDING
+  ACCEPTED
+  COOKING
+  ON_THE_WAY
   DELIVERED
   CANCELLED
+}
+
+enum PaymentType {
+  COD
 }

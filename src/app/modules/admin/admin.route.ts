@@ -4,6 +4,6 @@ import { AdminController } from "./admin.controller";
 const router = Router();
 
 router.get("/users", AdminController.getAllUsersFromDB);
-router.patch("/users/:id", AdminController.updateStatusFromDB);
+router.patch("/users/:id", AdminController.updateUserStatusIntoDB);
 
 export const AdminRoutes = router;

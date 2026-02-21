@@ -6,7 +6,7 @@ import status from "http-status";
 import { UserStatus } from "../../../generated/prisma/enums";
 
 const getAllUsersFromDB = catchAsync(async (req: Request, res: Response) => {
-    const result = await AdminServices.getAllusers();
+    const result = await AdminServices.getAllUsers();
     sendResponse(res, {
         statusCode: status.OK,
         success: true,
@@ -15,10 +15,10 @@ const getAllUsersFromDB = catchAsync(async (req: Request, res: Response) => {
     });
 });
 
-const updateStatusFromDB = catchAsync(async (req: Request, res: Response) => {
+const updateUserStatusIntoDB = catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params;
     const { status: UpdatedUserStatus } = req.body;
-    const result = await AdminServices.updateStatus(id as string, UpdatedUserStatus as UserStatus);
+    const result = await AdminServices.updateUserStatus(id as string, UpdatedUserStatus as UserStatus);
     sendResponse(res, {
         statusCode: status.OK,
         success: true,
@@ -29,5 +29,5 @@ const updateStatusFromDB = catchAsync(async (req: Request, res: Response) => {
 
 export const AdminController = {
     getAllUsersFromDB,
-    updateStatusFromDB
+    updateUserStatusIntoDB
 };

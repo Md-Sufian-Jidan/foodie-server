@@ -1,18 +1,17 @@
 model Order {
-    id         String          @id @default(uuid())
-    userId     String
-    user       User            @relation(fields: [userId], references: [id])
-    mealId     String
-    meal       Meal            @relation(fields: [mealId], references: [id])
-    providerId String
-    provider   ProviderProfile @relation(fields: [providerId], references: [id])
-    totalPrice Float
-    status     OrderStatus     @default(PLACED)
-    createdAt  DateTime        @default(now())
-    updatedAt  DateTime        @updatedAt
+  id          String      @id @default(uuid())
+  orderNumber String?     @unique
+  userId      String
+  providerId  String
+  totalAmount Float
+  status      OrderStatus
+  address     String
+  paymentType PaymentType @default(COD)
 
-    @@index([userId])
-    @@index([mealId])
-    @@index([providerId])
-    @@map("orders")
+  user     User            @relation(fields: [userId], references: [id])
+  provider ProviderProfile @relation(fields: [providerId], references: [id])
+  items    OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
