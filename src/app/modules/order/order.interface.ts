@@ -1,10 +1,14 @@
 import { OrderStatus } from "../../../generated/prisma/enums";
 
-export interface IOrderData {
-    userId: string;
+export interface CreateOrderPayload {
     providerId: string;
-    mealId: string;
-    quantity: number;
-    totalPrice: number;
-    status: OrderStatus;
+    address: string;
+    items: {
+        mealId: string;
+        quantity: number;
+    }[];
+}
+
+export interface OrderFilterPayload {
+    status?: OrderStatus;
 }

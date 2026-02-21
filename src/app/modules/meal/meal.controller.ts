@@ -180,4 +180,7 @@ export const MealController = {
     getDietaryOptions,
     getCuisineOptions,
     getPopularMeals,
+    getSingleMeal,
+    getAllMeals,
+    createMeal
 }
