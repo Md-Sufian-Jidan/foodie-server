@@ -1,21 +1,16 @@
-export interface IProviderData {
-    name: string;
-    description: string;
-    price: number;
-    image: string;
-    categoryId: string;
-    providerId: string;
-    createdAt: Date;
-    updatedAt: Date;
+export interface IProviderProfile {
+    userId: string;
+    shopName: string;
+    description?: string;
+    address: string;
+    phone: string;
+    isOpen?: boolean;
 }
 
-export interface IMealData {
-    name: string;
-    description: string;
-    price: number;
-    image: string;
-    categoryId: string;
-    providerId: string;
-    createdAt: Date;
-    updatedAt: Date;
+export interface IProviderProfileUpdate {
+    shopName?: string;
+    description?: string;
+    address?: string;
+    phone?: string;
+    isOpen?: boolean;
 }
