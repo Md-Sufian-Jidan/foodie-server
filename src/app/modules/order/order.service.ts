@@ -4,7 +4,7 @@ import { prisma } from "../../lib/prisma";
 import { CreateOrderPayload } from "./order.interface";
 import { OrderStatus } from "../../../generated/prisma/enums";
 
-const createOrderIntoDB = async (payload: CreateOrderPayload, customerId: string) => {
+const createOrderIntoDB = async (payload: CreateOrderPayload, userId: string) => {
     const provider = await prisma.providerProfile.findUnique({
         where: {
             id: payload.providerId
@@ -61,7 +61,7 @@ const createOrderIntoDB = async (payload: CreateOrderPayload, customerId: string
     const result = await prisma.order.create({
         data: {
             orderNumber: orderNumber,
-            userId: customerId,
+            userId,
             providerId: provider.id,
             address: payload.address,
             totalAmount: totalPrice,
@@ -81,47 +81,187 @@ const createOrderIntoDB = async (payload: CreateOrderPayload, customerId: string
     return result;
 };
 
-const getAllOrders = async (userId: string) => {
-    const result = await prisma.order.findMany({
+const getMyOrdersFromDB = (customerId: string) => {
+    const orders = prisma.order.findMany({
         where: {
-            userId
+            userId: customerId
         },
         include: {
-            meal: true,
-            provider: true,
+            items: {
+                include: {
+                    meal: true,
+                }
+            }
         },
         orderBy: {
             createdAt: "desc",
         },
     });
 
-    return result;
+    return orders;
 };
 
-const getSingleOrder = async (id: string, user: any) => {
-    const order = await prisma.order.findUnique({
-        where: { id },
+const getOrderByIdFromDB = (orderId: string, customerId: string) => {
+    const order = prisma.order.findFirst({
+        where: {
+            id: orderId,
+            userId: customerId
+        },
         include: {
-            meal: true,
-            provider: true,
-            user: true,
+            items: {
+                include: {
+                    meal: {
+                        include: {
+                            provider: true
+                        }
+                    },
+                }
+            },
+            provider: true
         },
     });
 
     if (!order) {
-        throw new Error("Order not found");
-    }
-
-    // যদি admin না হয়, তাহলে নিজের order কিনা check করো
-    if (user.role !== "ADMIN" && order.userId !== user.userId) {
-        throw new Error("You are not authorized to view this order");
+        throw new AppError(status.NOT_FOUND, "Order not found");
     }
 
     return order;
 };
 
-export const OrderServices = {
-    createOrder,
-    getAllOrders,
-    getSingleOrder
+const updateOrderStatusIntoDB = (orderId: string, orderStatus: OrderStatus, providerId: string) => {
+
+    const order = prisma.order.findFirst({
+        where: {
+            id: orderId,
+            providerId: providerId
+        }
+    });
+
+    if (!order) {
+        throw new AppError(status.NOT_FOUND, "Order not found");
+    }
+
+    const updatedOrder = prisma.order.update({
+        where: {
+            id: orderId,
+        },
+        data: {
+            status: orderStatus
+        },
+        include: {
+            items: {
+                include: {
+                    meal: true,
+                }
+            }
+        }
+    });
+
+    if (!updatedOrder) {
+        throw new AppError(status.NOT_FOUND, "Order not found");
+    }
+
+    return updatedOrder;
+};
+
+const trackOrderStatusIntoDB = (orderId: string, userId: string) => {
+    const order = prisma.order.findFirst({
+        where: {
+            id: orderId,
+            userId: userId
+        },
+        select: {
+            id: true,
+            status: true,
+            address: true,
+            totalAmount: true,
+            createdAt: true,
+            updatedAt: true,
+            items: {
+                include: {
+                    meal: true
+                },
+            },
+            provider: true
+        },
+    });
+
+    if (!order) {
+        throw new AppError(status.NOT_FOUND, "Order not found");
+    }
+
+    return order;
+};
+
+const cancelOrderIntoDB = (orderId: string, customerId: string) => {
+
+    const order = prisma.order.findFirst({
+        where: {
+            id: orderId,
+            userId: customerId
+        }
+    });
+
+    if (!order) {
+        throw new AppError(status.NOT_FOUND, "Order not found");
+    }
+
+    if (order?.status === OrderStatus.CANCELLED) {
+        throw new AppError(status.BAD_REQUEST, "Order is already cancelled");
+    }
+
+    const updatedOrder = prisma.order.update({
+        where: {
+            id: orderId,
+        },
+        data: {
+            status: OrderStatus.CANCELLED
+        },
+        include: {
+            items: {
+                include: {
+                    meal: true,
+                }
+            }
+        }
+    });
+
+    if (!updatedOrder) {
+        throw new AppError(status.NOT_FOUND, "Order not found");
+    }
+
+    return updatedOrder;
+};
+
+const getAllOrdersFromDB = async () => {
+
+    const orders = prisma.order.findMany({
+        include: {
+            items: {
+                include: {
+                    meal: true,
+                },
+            },
+            provider: true,
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+
+    if (!orders) {
+        throw new AppError(status.NOT_FOUND, "Orders not found");
+    }
+
+    return orders;
+}
+
+export const OrderService = {
+    createOrderIntoDB,
+    getMyOrdersFromDB,
+    getOrderByIdFromDB,
+    updateOrderStatusIntoDB,
+    trackOrderStatusIntoDB,
+    getAllOrdersFromDB,
+    cancelOrderIntoDB
 };
