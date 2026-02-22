@@ -2,67 +2,47 @@ import { Role } from "../../generated/prisma/enums";
 import { envVars } from "../config/env";
 import { prisma } from "../lib/prisma";
 
-async function seedAdmin() {
+
+const AdminCreateInitialData = async () => {
     try {
         const adminData = {
-            name: "Admin 1",
+            name: "Admin",
             email: envVars.ADMIN_EMAIL,
             password: envVars.ADMIN_PASSWORD,
-            role: Role.ADMIN
+            role: Role.ADMIN,
+            phone: "01906844598",
         };
-        console.log(adminData);
-        if (!adminData.email || !adminData.password) {
-            throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be defined");
-        }
-
         const existingAdmin = await prisma.user.findUnique({
-            where: {
-                email: adminData.email
-            },
+            where: { email: adminData.email },
         });
-
         if (existingAdmin) {
-            throw new Error("Admin already exists");
+            console.log("Admin user already exists. Skipping creation.");
+            return;
         }
-
-        const response = await fetch(
+        const adminUser = await fetch(
             `${envVars.BETTER_AUTH_URL}/api/auth/sign-up/email`,
             {
                 method: "POST",
                 headers: {
-                    "content-type": "application/json",
-                    origin: envVars.BETTER_AUTH_URL!,
+                    "Content-Type": "application/json",
+                    Origin: envVars.FRONTEND_URL as string,
                 },
-                body: JSON.stringify({
-                    name: adminData.name,
-                    email: adminData.email,
-                    password: adminData.password,
-                    role: adminData.role,
-                }),
-            }
+                body: JSON.stringify(adminData),
+            },
         );
-
-        if (!response.ok) {
-            const errorBody = await response.text();
-            throw new Error(`Failed to create admin: ${errorBody}`);
+        if (adminUser.ok) {
+            console.log("Initial admin user created successfully.");
+        } else {
+            console.error(
+                "Failed to create admin user. Status:",
+                adminUser.status,
+                "Status Text:",
+                adminUser.statusText,
+            );
         }
-
-        if (response.ok) {
-            await prisma.user.update({
-                where: {
-                    email: adminData.email
-                },
-                data: {
-                    emailVerified: true,
-                }
-            });
-        };
-        console.log("🚀 Admin seeded successfully.");
     } catch (error) {
-        console.error("❌ Failed to seed admin:", error);
-        process.exit(1); // optional but common in seed scripts
+        console.error("Error creating initial admin data:", error);
     }
-
 };
 
-seedAdmin();
+AdminCreateInitialData();

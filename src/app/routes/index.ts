@@ -1,18 +1,39 @@
-import { Router } from "express";
+import express from "express";
 import { CategoryRoutes } from "../modules/category/category.route";
 import { MealRoutes } from "../modules/meal/meal.route";
-import { AdminRoutes } from "../modules/admin/admin.route";
-import { UserRoutes } from "../modules/user/user.route";
-import { ProviderRoutes } from "../modules/provider/provider.route";
 import { OrderRoutes } from "../modules/order/order.route";
+import { ProviderRoutes } from "../modules/provider/provider.route";
+import { UserRoutes } from "../modules/user/user.route";
+import { ReviewRoutes } from "../modules/review/review.route";
 
-const router = Router();
+const router = express.Router();
 
-router.use("/category", CategoryRoutes);
-router.use("/meal", MealRoutes);
-router.use("/admin", AdminRoutes);
-router.use("/user", UserRoutes);
-router.use("/provider", ProviderRoutes);
-router.use("/order", OrderRoutes);
+const moduleRoutes = [
+    {
+        path: "/users",
+        routes: UserRoutes,
+    },
+    {
+        path: "/providers",
+        routes: ProviderRoutes,
+    },
+    {
+        path: "/categories",
+        routes: CategoryRoutes,
+    },
+    {
+        path: "/meals",
+        routes: MealRoutes,
+    },
+    {
+        path: "/orders",
+        routes: OrderRoutes,
+    },
+    {
+        path: "/reviews",
+        routes: ReviewRoutes,
+    },
+];
 
-export const IndexRoutes = router;
+moduleRoutes.forEach((route) => router.use(route.path, route.routes));
+export default router;
