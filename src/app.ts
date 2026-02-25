@@ -1,34 +1,51 @@
-import cors from "cors";
-import express, { Application, Request, Response } from "express";
-import { envVars } from "./app/config/env";
-import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
-import { notFound } from "./app/middleware/notFound";
-import { IndexRoutes } from "./app/routes";
-import { auth } from "./app/lib/auth";
 import { toNodeHandler } from "better-auth/node";
+import cors from "cors";
+import express, { Application } from "express";
+import routes from "./app/routes";
+import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
+import notFound from "./app/middleware/notFound";
+import status from "http-status";
+import { sendResponse } from "./app/shared/sendResponse";
+import { auth } from "./app/lib/auth";
+import router from "./app/routes";
+import { envVars } from "./app/config/env";
 
 const app: Application = express();
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            const allowed = envVars.FRONTEND_URL?.replace(/\/$/, "");
+            if (!origin || origin.replace(/\/$/, "") === allowed) {
+                callback(null, true);
+            } else {
+                callback(new Error("Not allowed by CORS"));
+            }
+        },
+        credentials: true,
+    }),
+);
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors({
-    origin: [envVars.FRONTEND_URL, "http://localhost:3000", "http://localhost:5000"],
-    credentials: true,
-}));
+app.all("/api/auth/*any", toNodeHandler(auth));
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
-app.use("/api/v1", IndexRoutes);
-
-// Basic route
-app.get('/', async (req: Request, res: Response) => {
-    res.status(201).json({
+app.get("/", (req, res) => {
+    sendResponse(res, {
+        statusCode: status.OK,
         success: true,
-        message: 'API is working',
-    })
+        message: "Server is running",
+        data: {
+            author: "Md. Abu Sufian Jidan",
+            version: "1.0.0",
+            host: req.hostname,
+            time: new Date().toISOString(),
+        },
+    });
 });
 
+app.use("/api/v1", router);
 app.use(globalErrorHandler);
 app.use(notFound);
-
 
 export default app;
