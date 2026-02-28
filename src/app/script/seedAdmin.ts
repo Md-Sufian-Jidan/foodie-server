@@ -3,7 +3,7 @@ import { envVars } from "../config/env";
 import { prisma } from "../lib/prisma";
 
 
-const AdminCreateInitialData = async () => {
+const seedAdmin = async () => {
     try {
         const adminData = {
             name: "Admin",
@@ -20,12 +20,12 @@ const AdminCreateInitialData = async () => {
             return;
         }
         const adminUser = await fetch(
-            `${envVars.BETTER_AUTH_URL}/api/auth/sign-up/email`,
+            `${process.env.BETTER_AUTH_URL}/api/auth/sign-up/email`,
             {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    Origin: envVars.FRONTEND_URL as string,
+                    Origin: process.env.FRONTEND_URL as string,
                 },
                 body: JSON.stringify(adminData),
             },
@@ -45,4 +45,4 @@ const AdminCreateInitialData = async () => {
     }
 };
 
-AdminCreateInitialData();
+seedAdmin();

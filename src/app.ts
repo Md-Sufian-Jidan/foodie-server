@@ -1,7 +1,6 @@
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
 import express, { Application } from "express";
-import routes from "./app/routes";
 import { globalErrorHandler } from "./app/middleware/globalErrorHandler";
 import notFound from "./app/middleware/notFound";
 import status from "http-status";
@@ -18,6 +17,8 @@ app.use(
     cors({
         origin: (origin, callback) => {
             const allowed = envVars.FRONTEND_URL?.replace(/\/$/, "");
+            console.log("Allowed origin:", allowed);
+            console.log("Origin:", origin);
             if (!origin || origin.replace(/\/$/, "") === allowed) {
                 callback(null, true);
             } else {
