@@ -25,16 +25,18 @@ const createCategoryIntoDB = async (payload: ICategory) => {
 };
 
 const getAllCategoriesFromDB = async () => {
-    const result = await prisma.category.findMany({
-        include: {
-            _count: {
-                select: { meals: true },
-            },
-        },
-        orderBy: {
-            createdAt: "desc",
-        },
-    });
+    // const result = await prisma.category.findMany({
+    //     include: {
+    //         _count: {
+    //             select: { meals: true },
+    //         },
+    //     },
+    //     orderBy: {
+    //         createdAt: "desc",
+    //     },
+    // });
+
+    const result = await prisma.category.findMany();
 
     return result;
 };

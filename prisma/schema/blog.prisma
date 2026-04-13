@@ -1,0 +1,11 @@
+model Blogs {
+    id        Int      @id @default(autoincrement())
+    title     String
+    slug      String   @unique
+    content   String   @db.Text
+    thumbnail String?
+    userId    String
+    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}

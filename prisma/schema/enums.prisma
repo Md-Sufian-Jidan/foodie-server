@@ -2,6 +2,8 @@ enum Role {
   ADMIN
   PROVIDER
   CUSTOMER
+  DRIVER
+  SUPPORT
 }
 
 enum UserStatus {

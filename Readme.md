@@ -45,8 +45,8 @@
 | Role | Email | Password |
 |------|-------|----------|
 | 👑 Admin | `adminfoodie@gmail.com` | `Admin@1234` |
-| 🏪 Provider | `superprovider@gmail.com` | `superprovider@com` |
-| 👤 Customer | `supercustomer@gmail.com` | `supercustomer@com` |
+| 🏪 Provider | `superprovider@gmail.com` | `Superprovider@com` |
+| 👤 Customer | `supercustomer@gmail.com` | `Supercustomer@com` |
 
 ---
 

@@ -13,12 +13,15 @@ const app: Application = express();
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+// const allowedOrigins = [
+//     "http://localhost:3000",
+//     "https://mealmate-lemon.vercel.app",
+// ];
 app.use(
     cors({
+        // origin: ["http://localhost:3000", "https://mealmate-lemon.vercel.app"],
         origin: (origin, callback) => {
             const allowed = envVars.FRONTEND_URL?.replace(/\/$/, "");
-            console.log("Allowed origin:", allowed);
-            console.log("Origin:", origin);
             if (!origin || origin.replace(/\/$/, "") === allowed) {
                 callback(null, true);
             } else {

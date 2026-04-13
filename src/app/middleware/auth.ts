@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from "express";
 import { auth as betterAuth } from '../lib/auth'
 import status from "http-status";
 import { Role, UserStatus } from "../../generated/prisma/enums";
-import { sendResponse } from "../shared/sendResponse";
 import { fromNodeHeaders } from "better-auth/node";
 import AppError from "../errorHelpers/AppError";
 

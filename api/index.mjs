@@ -1,7 +1,7 @@
 // src/app.ts
 import { toNodeHandler } from "better-auth/node";
 import cors from "cors";
-import express3 from "express";
+import express5 from "express";
 
 // src/app/config/env.ts
 import dotenv from "dotenv";
@@ -148,12 +148,13 @@ import status17 from "http-status";
 
 // src/app/shared/sendResponse.ts
 var sendResponse = (res, responseData) => {
-  const { statusCode, success, message, data } = responseData;
+  const { statusCode, success, message, data, meta } = responseData;
   res.status(statusCode).json({
     success,
     statusCode,
     message,
-    data
+    data,
+    meta
   });
 };
 
@@ -176,7 +177,7 @@ var config = {
   "clientVersion": "7.4.0",
   "engineVersion": "ab56fe763f921d033a6c195e7ddeb3e255bdbb57",
   "activeProvider": "postgresql",
-  "inlineSchema": 'model Category {\n  id   String @id @default(uuid())\n  name String @unique\n  slug String @unique\n\n  meals Meal[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nenum Role {\n  ADMIN\n  PROVIDER\n  CUSTOMER\n}\n\nenum UserStatus {\n  ACTIVE\n  INACTIVE\n  BLOCKED\n  DELETED\n}\n\nenum OrderStatus {\n  PENDING\n  ACCEPTED\n  COOKING\n  ON_THE_WAY\n  DELIVERED\n  CANCELLED\n}\n\nenum PaymentType {\n  COD\n}\n\nmodel Meal {\n  id          String          @id @default(uuid())\n  providerId  String\n  categoryId  String\n  name        String\n  description String?\n  price       Float\n  image       String?\n  isAvailable Boolean         @default(true)\n  calories    Int\n  ingredients String[]        @default([])\n  cuisine     String?\n  dietary     String[]        @default([])\n  mealType    String?\n  spiceLevel  String?\n  provider    ProviderProfile @relation(fields: [providerId], references: [id])\n  category    Category        @relation(fields: [categoryId], references: [id])\n  reviews     Review[]\n  orderItems  OrderItem[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Order {\n  id          String      @id @default(uuid())\n  orderNumber String?     @unique\n  userId      String\n  providerId  String\n  totalAmount Float\n  status      OrderStatus\n  address     String\n  paymentType PaymentType @default(COD)\n\n  user     User            @relation(fields: [userId], references: [id])\n  provider ProviderProfile @relation(fields: [providerId], references: [id])\n  items    OrderItem[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel OrderItem {\n  id       String @id @default(uuid())\n  orderId  String\n  mealId   String\n  price    Float\n  quantity Int\n\n  order Order @relation(fields: [orderId], references: [id])\n  meal  Meal  @relation(fields: [mealId], references: [id])\n}\n\nmodel ProviderProfile {\n  id          String  @id @default(uuid())\n  userId      String  @unique\n  shopName    String\n  description String?\n  address     String\n  phone       String\n  isOpen      Boolean @default(true)\n\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  meals     Meal[]\n  orders    Order[]\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Review {\n  id      String  @id @default(uuid())\n  userId  String\n  mealId  String\n  rating  Int\n  comment String?\n\n  user User @relation(fields: [userId], references: [id])\n  meal Meal @relation(fields: [mealId], references: [id])\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@unique([userId, mealId], name: "unique_user_meal_review")\n}\n\n// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = "prisma-client"\n  output   = "../../src/generated/prisma"\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n\nmodel User {\n  id            String     @id\n  name          String\n  email         String\n  emailVerified Boolean    @default(false)\n  image         String?\n  role          Role       @default(CUSTOMER)\n  status        UserStatus @default(ACTIVE)\n  phone         String?\n  createdAt     DateTime   @default(now())\n  updatedAt     DateTime   @updatedAt\n  sessions      Session[]\n  accounts      Account[]\n\n  providerProfile ProviderProfile?\n  orders          Order[]\n  reviews         Review[]\n\n  @@unique([email])\n  @@map("user")\n}\n\nmodel Session {\n  id        String   @id\n  expiresAt DateTime\n  token     String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  ipAddress String?\n  userAgent String?\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([token])\n  @@index([userId])\n  @@map("session")\n}\n\nmodel Account {\n  id                    String    @id\n  accountId             String\n  providerId            String\n  userId                String\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  accessToken           String?\n  refreshToken          String?\n  idToken               String?\n  accessTokenExpiresAt  DateTime?\n  refreshTokenExpiresAt DateTime?\n  scope                 String?\n  password              String?\n  createdAt             DateTime  @default(now())\n  updatedAt             DateTime  @updatedAt\n\n  @@index([userId])\n  @@map("account")\n}\n\nmodel Verification {\n  id         String   @id\n  identifier String\n  value      String\n  expiresAt  DateTime\n  createdAt  DateTime @default(now())\n  updatedAt  DateTime @updatedAt\n\n  @@index([identifier])\n  @@map("verification")\n}\n',
+  "inlineSchema": 'model Blogs {\n  id        Int      @id @default(autoincrement())\n  title     String\n  slug      String   @unique\n  content   String   @db.Text\n  thumbnail String?\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Category {\n  id   String @id @default(uuid())\n  name String @unique\n  slug String @unique\n\n  meals Meal[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nenum Role {\n  ADMIN\n  PROVIDER\n  CUSTOMER\n  DRIVER\n  SUPPORT\n}\n\nenum UserStatus {\n  ACTIVE\n  INACTIVE\n  BLOCKED\n  DELETED\n}\n\nenum OrderStatus {\n  PENDING\n  ACCEPTED\n  COOKING\n  ON_THE_WAY\n  DELIVERED\n  CANCELLED\n}\n\nenum PaymentType {\n  COD\n}\n\nmodel Meal {\n  id          String          @id @default(uuid())\n  providerId  String\n  categoryId  String\n  name        String\n  description String?\n  price       Float\n  image       String?\n  isAvailable Boolean         @default(true)\n  calories    Int\n  ingredients String[]        @default([])\n  cuisine     String?\n  dietary     String[]        @default([])\n  mealType    String?\n  spiceLevel  String?\n  provider    ProviderProfile @relation(fields: [providerId], references: [id])\n  category    Category        @relation(fields: [categoryId], references: [id])\n  reviews     Review[]\n  orderItems  OrderItem[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Order {\n  id          String      @id @default(uuid())\n  orderNumber String?     @unique\n  userId      String\n  providerId  String\n  totalAmount Float\n  status      OrderStatus\n  address     String\n  paymentType PaymentType @default(COD)\n\n  user     User            @relation(fields: [userId], references: [id])\n  provider ProviderProfile @relation(fields: [providerId], references: [id])\n  items    OrderItem[]\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel OrderItem {\n  id       String @id @default(uuid())\n  orderId  String\n  mealId   String\n  price    Float\n  quantity Int\n\n  order Order @relation(fields: [orderId], references: [id])\n  meal  Meal  @relation(fields: [mealId], references: [id])\n}\n\nmodel ProviderProfile {\n  id          String  @id @default(uuid())\n  userId      String  @unique\n  shopName    String\n  description String?\n  address     String\n  phone       String\n  isOpen      Boolean @default(true)\n\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n  meals     Meal[]\n  orders    Order[]\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n}\n\nmodel Review {\n  id      String  @id @default(uuid())\n  userId  String\n  mealId  String\n  rating  Int\n  comment String?\n\n  user User @relation(fields: [userId], references: [id])\n  meal Meal @relation(fields: [mealId], references: [id])\n\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n\n  @@unique([userId, mealId], name: "unique_user_meal_review")\n}\n\n// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = "prisma-client"\n  output   = "../../src/generated/prisma"\n}\n\ndatasource db {\n  provider = "postgresql"\n}\n\nmodel User {\n  id            String     @id\n  name          String\n  email         String\n  emailVerified Boolean    @default(false)\n  image         String?\n  role          Role       @default(CUSTOMER)\n  status        UserStatus @default(ACTIVE)\n  phone         String?\n  createdAt     DateTime   @default(now())\n  updatedAt     DateTime   @updatedAt\n  sessions      Session[]\n  accounts      Account[]\n\n  providerProfile ProviderProfile?\n  orders          Order[]\n  reviews         Review[]\n  blogs           Blogs[]\n\n  @@unique([email])\n  @@map("user")\n}\n\nmodel Session {\n  id        String   @id\n  expiresAt DateTime\n  token     String\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  ipAddress String?\n  userAgent String?\n  userId    String\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@unique([token])\n  @@index([userId])\n  @@map("session")\n}\n\nmodel Account {\n  id                    String    @id\n  accountId             String\n  providerId            String\n  userId                String\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n  accessToken           String?\n  refreshToken          String?\n  idToken               String?\n  accessTokenExpiresAt  DateTime?\n  refreshTokenExpiresAt DateTime?\n  scope                 String?\n  password              String?\n  createdAt             DateTime  @default(now())\n  updatedAt             DateTime  @updatedAt\n\n  @@index([userId])\n  @@map("account")\n}\n\nmodel Verification {\n  id         String   @id\n  identifier String\n  value      String\n  expiresAt  DateTime\n  createdAt  DateTime @default(now())\n  updatedAt  DateTime @updatedAt\n\n  @@index([identifier])\n  @@map("verification")\n}\n',
   "runtimeDataModel": {
     "models": {},
     "enums": {},
@@ -187,10 +188,10 @@ var config = {
     "graph": ""
   }
 };
-config.runtimeDataModel = JSON.parse('{"models":{"Category":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"slug","kind":"scalar","type":"String"},{"name":"meals","kind":"object","type":"Meal","relationName":"CategoryToMeal"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Meal":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"categoryId","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"price","kind":"scalar","type":"Float"},{"name":"image","kind":"scalar","type":"String"},{"name":"isAvailable","kind":"scalar","type":"Boolean"},{"name":"calories","kind":"scalar","type":"Int"},{"name":"ingredients","kind":"scalar","type":"String"},{"name":"cuisine","kind":"scalar","type":"String"},{"name":"dietary","kind":"scalar","type":"String"},{"name":"mealType","kind":"scalar","type":"String"},{"name":"spiceLevel","kind":"scalar","type":"String"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"MealToProviderProfile"},{"name":"category","kind":"object","type":"Category","relationName":"CategoryToMeal"},{"name":"reviews","kind":"object","type":"Review","relationName":"MealToReview"},{"name":"orderItems","kind":"object","type":"OrderItem","relationName":"MealToOrderItem"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Order":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"orderNumber","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"totalAmount","kind":"scalar","type":"Float"},{"name":"status","kind":"enum","type":"OrderStatus"},{"name":"address","kind":"scalar","type":"String"},{"name":"paymentType","kind":"enum","type":"PaymentType"},{"name":"user","kind":"object","type":"User","relationName":"OrderToUser"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"OrderToProviderProfile"},{"name":"items","kind":"object","type":"OrderItem","relationName":"OrderToOrderItem"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"OrderItem":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"orderId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"price","kind":"scalar","type":"Float"},{"name":"quantity","kind":"scalar","type":"Int"},{"name":"order","kind":"object","type":"Order","relationName":"OrderToOrderItem"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToOrderItem"}],"dbName":null},"ProviderProfile":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"shopName","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"address","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"isOpen","kind":"scalar","type":"Boolean"},{"name":"user","kind":"object","type":"User","relationName":"ProviderProfileToUser"},{"name":"meals","kind":"object","type":"Meal","relationName":"MealToProviderProfile"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToProviderProfile"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Review":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"rating","kind":"scalar","type":"Int"},{"name":"comment","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"ReviewToUser"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToReview"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"User":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"emailVerified","kind":"scalar","type":"Boolean"},{"name":"image","kind":"scalar","type":"String"},{"name":"role","kind":"enum","type":"Role"},{"name":"status","kind":"enum","type":"UserStatus"},{"name":"phone","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"sessions","kind":"object","type":"Session","relationName":"SessionToUser"},{"name":"accounts","kind":"object","type":"Account","relationName":"AccountToUser"},{"name":"providerProfile","kind":"object","type":"ProviderProfile","relationName":"ProviderProfileToUser"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToUser"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToUser"}],"dbName":"user"},"Session":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"token","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"ipAddress","kind":"scalar","type":"String"},{"name":"userAgent","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"SessionToUser"}],"dbName":"session"},"Account":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"accountId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"AccountToUser"},{"name":"accessToken","kind":"scalar","type":"String"},{"name":"refreshToken","kind":"scalar","type":"String"},{"name":"idToken","kind":"scalar","type":"String"},{"name":"accessTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"refreshTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"scope","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"account"},"Verification":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"identifier","kind":"scalar","type":"String"},{"name":"value","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"verification"}},"enums":{},"types":{}}');
+config.runtimeDataModel = JSON.parse('{"models":{"Blogs":{"fields":[{"name":"id","kind":"scalar","type":"Int"},{"name":"title","kind":"scalar","type":"String"},{"name":"slug","kind":"scalar","type":"String"},{"name":"content","kind":"scalar","type":"String"},{"name":"thumbnail","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"BlogsToUser"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Category":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"slug","kind":"scalar","type":"String"},{"name":"meals","kind":"object","type":"Meal","relationName":"CategoryToMeal"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Meal":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"categoryId","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"price","kind":"scalar","type":"Float"},{"name":"image","kind":"scalar","type":"String"},{"name":"isAvailable","kind":"scalar","type":"Boolean"},{"name":"calories","kind":"scalar","type":"Int"},{"name":"ingredients","kind":"scalar","type":"String"},{"name":"cuisine","kind":"scalar","type":"String"},{"name":"dietary","kind":"scalar","type":"String"},{"name":"mealType","kind":"scalar","type":"String"},{"name":"spiceLevel","kind":"scalar","type":"String"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"MealToProviderProfile"},{"name":"category","kind":"object","type":"Category","relationName":"CategoryToMeal"},{"name":"reviews","kind":"object","type":"Review","relationName":"MealToReview"},{"name":"orderItems","kind":"object","type":"OrderItem","relationName":"MealToOrderItem"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Order":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"orderNumber","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"totalAmount","kind":"scalar","type":"Float"},{"name":"status","kind":"enum","type":"OrderStatus"},{"name":"address","kind":"scalar","type":"String"},{"name":"paymentType","kind":"enum","type":"PaymentType"},{"name":"user","kind":"object","type":"User","relationName":"OrderToUser"},{"name":"provider","kind":"object","type":"ProviderProfile","relationName":"OrderToProviderProfile"},{"name":"items","kind":"object","type":"OrderItem","relationName":"OrderToOrderItem"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"OrderItem":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"orderId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"price","kind":"scalar","type":"Float"},{"name":"quantity","kind":"scalar","type":"Int"},{"name":"order","kind":"object","type":"Order","relationName":"OrderToOrderItem"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToOrderItem"}],"dbName":null},"ProviderProfile":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"shopName","kind":"scalar","type":"String"},{"name":"description","kind":"scalar","type":"String"},{"name":"address","kind":"scalar","type":"String"},{"name":"phone","kind":"scalar","type":"String"},{"name":"isOpen","kind":"scalar","type":"Boolean"},{"name":"user","kind":"object","type":"User","relationName":"ProviderProfileToUser"},{"name":"meals","kind":"object","type":"Meal","relationName":"MealToProviderProfile"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToProviderProfile"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"Review":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"mealId","kind":"scalar","type":"String"},{"name":"rating","kind":"scalar","type":"Int"},{"name":"comment","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"ReviewToUser"},{"name":"meal","kind":"object","type":"Meal","relationName":"MealToReview"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":null},"User":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"name","kind":"scalar","type":"String"},{"name":"email","kind":"scalar","type":"String"},{"name":"emailVerified","kind":"scalar","type":"Boolean"},{"name":"image","kind":"scalar","type":"String"},{"name":"role","kind":"enum","type":"Role"},{"name":"status","kind":"enum","type":"UserStatus"},{"name":"phone","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"sessions","kind":"object","type":"Session","relationName":"SessionToUser"},{"name":"accounts","kind":"object","type":"Account","relationName":"AccountToUser"},{"name":"providerProfile","kind":"object","type":"ProviderProfile","relationName":"ProviderProfileToUser"},{"name":"orders","kind":"object","type":"Order","relationName":"OrderToUser"},{"name":"reviews","kind":"object","type":"Review","relationName":"ReviewToUser"},{"name":"blogs","kind":"object","type":"Blogs","relationName":"BlogsToUser"}],"dbName":"user"},"Session":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"token","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"},{"name":"ipAddress","kind":"scalar","type":"String"},{"name":"userAgent","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"SessionToUser"}],"dbName":"session"},"Account":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"accountId","kind":"scalar","type":"String"},{"name":"providerId","kind":"scalar","type":"String"},{"name":"userId","kind":"scalar","type":"String"},{"name":"user","kind":"object","type":"User","relationName":"AccountToUser"},{"name":"accessToken","kind":"scalar","type":"String"},{"name":"refreshToken","kind":"scalar","type":"String"},{"name":"idToken","kind":"scalar","type":"String"},{"name":"accessTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"refreshTokenExpiresAt","kind":"scalar","type":"DateTime"},{"name":"scope","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"account"},"Verification":{"fields":[{"name":"id","kind":"scalar","type":"String"},{"name":"identifier","kind":"scalar","type":"String"},{"name":"value","kind":"scalar","type":"String"},{"name":"expiresAt","kind":"scalar","type":"DateTime"},{"name":"createdAt","kind":"scalar","type":"DateTime"},{"name":"updatedAt","kind":"scalar","type":"DateTime"}],"dbName":"verification"}},"enums":{},"types":{}}');
 config.parameterizationSchema = {
-  strings: JSON.parse('["where","orderBy","cursor","user","sessions","accounts","providerProfile","provider","order","meal","items","_count","orders","reviews","meals","category","orderItems","Category.findUnique","Category.findUniqueOrThrow","Category.findFirst","Category.findFirstOrThrow","Category.findMany","data","Category.createOne","Category.createMany","Category.createManyAndReturn","Category.updateOne","Category.updateMany","Category.updateManyAndReturn","create","update","Category.upsertOne","Category.deleteOne","Category.deleteMany","having","_min","_max","Category.groupBy","Category.aggregate","Meal.findUnique","Meal.findUniqueOrThrow","Meal.findFirst","Meal.findFirstOrThrow","Meal.findMany","Meal.createOne","Meal.createMany","Meal.createManyAndReturn","Meal.updateOne","Meal.updateMany","Meal.updateManyAndReturn","Meal.upsertOne","Meal.deleteOne","Meal.deleteMany","_avg","_sum","Meal.groupBy","Meal.aggregate","Order.findUnique","Order.findUniqueOrThrow","Order.findFirst","Order.findFirstOrThrow","Order.findMany","Order.createOne","Order.createMany","Order.createManyAndReturn","Order.updateOne","Order.updateMany","Order.updateManyAndReturn","Order.upsertOne","Order.deleteOne","Order.deleteMany","Order.groupBy","Order.aggregate","OrderItem.findUnique","OrderItem.findUniqueOrThrow","OrderItem.findFirst","OrderItem.findFirstOrThrow","OrderItem.findMany","OrderItem.createOne","OrderItem.createMany","OrderItem.createManyAndReturn","OrderItem.updateOne","OrderItem.updateMany","OrderItem.updateManyAndReturn","OrderItem.upsertOne","OrderItem.deleteOne","OrderItem.deleteMany","OrderItem.groupBy","OrderItem.aggregate","ProviderProfile.findUnique","ProviderProfile.findUniqueOrThrow","ProviderProfile.findFirst","ProviderProfile.findFirstOrThrow","ProviderProfile.findMany","ProviderProfile.createOne","ProviderProfile.createMany","ProviderProfile.createManyAndReturn","ProviderProfile.updateOne","ProviderProfile.updateMany","ProviderProfile.updateManyAndReturn","ProviderProfile.upsertOne","ProviderProfile.deleteOne","ProviderProfile.deleteMany","ProviderProfile.groupBy","ProviderProfile.aggregate","Review.findUnique","Review.findUniqueOrThrow","Review.findFirst","Review.findFirstOrThrow","Review.findMany","Review.createOne","Review.createMany","Review.createManyAndReturn","Review.updateOne","Review.updateMany","Review.updateManyAndReturn","Review.upsertOne","Review.deleteOne","Review.deleteMany","Review.groupBy","Review.aggregate","User.findUnique","User.findUniqueOrThrow","User.findFirst","User.findFirstOrThrow","User.findMany","User.createOne","User.createMany","User.createManyAndReturn","User.updateOne","User.updateMany","User.updateManyAndReturn","User.upsertOne","User.deleteOne","User.deleteMany","User.groupBy","User.aggregate","Session.findUnique","Session.findUniqueOrThrow","Session.findFirst","Session.findFirstOrThrow","Session.findMany","Session.createOne","Session.createMany","Session.createManyAndReturn","Session.updateOne","Session.updateMany","Session.updateManyAndReturn","Session.upsertOne","Session.deleteOne","Session.deleteMany","Session.groupBy","Session.aggregate","Account.findUnique","Account.findUniqueOrThrow","Account.findFirst","Account.findFirstOrThrow","Account.findMany","Account.createOne","Account.createMany","Account.createManyAndReturn","Account.updateOne","Account.updateMany","Account.updateManyAndReturn","Account.upsertOne","Account.deleteOne","Account.deleteMany","Account.groupBy","Account.aggregate","Verification.findUnique","Verification.findUniqueOrThrow","Verification.findFirst","Verification.findFirstOrThrow","Verification.findMany","Verification.createOne","Verification.createMany","Verification.createManyAndReturn","Verification.updateOne","Verification.updateMany","Verification.updateManyAndReturn","Verification.upsertOne","Verification.deleteOne","Verification.deleteMany","Verification.groupBy","Verification.aggregate","AND","OR","NOT","id","identifier","value","expiresAt","createdAt","updatedAt","equals","in","notIn","lt","lte","gt","gte","not","contains","startsWith","endsWith","accountId","providerId","userId","accessToken","refreshToken","idToken","accessTokenExpiresAt","refreshTokenExpiresAt","scope","password","token","ipAddress","userAgent","name","email","emailVerified","image","Role","role","UserStatus","status","phone","every","some","none","mealId","rating","comment","shopName","description","address","isOpen","orderId","price","quantity","orderNumber","totalAmount","OrderStatus","PaymentType","paymentType","categoryId","isAvailable","calories","ingredients","cuisine","dietary","mealType","spiceLevel","has","hasEvery","hasSome","slug","unique_user_meal_review","is","isNot","connectOrCreate","upsert","createMany","set","disconnect","delete","connect","updateMany","deleteMany","push","increment","decrement","multiply","divide"]'),
-  graph: "_QReoAEJDgAAvwIAILkBAADNAgAwugEAACwAELsBAADNAgAwvAEBAAAAAcABQACaAgAhwQFAAJoCACHaAQEAAAABgAIBAAAAAQEAAAABACAXBwAA2AIAIA0AALcCACAPAADeAgAgEAAA2QIAILkBAADdAgAwugEAAAMAELsBAADdAgAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAhzgEBAJkCACHaAQEAmQIAId0BAQCwAgAh6gEBALACACHuAQgA0wIAIfUBAQCZAgAh9gEgAK8CACH3AQIA0AIAIfgBAADLAgAg-QEBALACACH6AQAAywIAIPsBAQCwAgAh_AEBALACACEJBwAAiwQAIA0AAI0EACAPAAC8BAAgEAAAuwQAIN0BAADkAgAg6gEAAOQCACD5AQAA5AIAIPsBAADkAgAg_AEAAOQCACAXBwAA2AIAIA0AALcCACAPAADeAgAgEAAA2QIAILkBAADdAgAwugEAAAMAELsBAADdAgAwvAEBAAAAAcABQACaAgAhwQFAAJoCACHOAQEAmQIAIdoBAQCZAgAh3QEBALACACHqAQEAsAIAIe4BCADTAgAh9QEBAJkCACH2ASAArwIAIfcBAgDQAgAh-AEAAMsCACD5AQEAsAIAIfoBAADLAgAg-wEBALACACH8AQEAsAIAIQMAAAADACABAAAEADACAAAFACAMAwAAvgIAILkBAADcAgAwugEAAAcAELsBAADcAgAwvAEBAJkCACG_AUAAmgIAIcABQACaAgAhwQFAAJoCACHPAQEAmQIAIdcBAQCZAgAh2AEBALACACHZAQEAsAIAIQMDAACYBAAg2AEAAOQCACDZAQAA5AIAIAwDAAC-AgAguQEAANwCADC6AQAABwAQuwEAANwCADC8AQEAAAABvwFAAJoCACHAAUAAmgIAIcEBQACaAgAhzwEBAJkCACHXAQEAAAAB2AEBALACACHZAQEAsAIAIQMAAAAHACABAAAIADACAAAJACARAwAAvgIAILkBAADaAgAwugEAAAsAELsBAADaAgAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAhzQEBAJkCACHOAQEAmQIAIc8BAQCZAgAh0AEBALACACHRAQEAsAIAIdIBAQCwAgAh0wFAANsCACHUAUAA2wIAIdUBAQCwAgAh1gEBALACACEIAwAAmAQAINABAADkAgAg0QEAAOQCACDSAQAA5AIAINMBAADkAgAg1AEAAOQCACDVAQAA5AIAINYBAADkAgAgEQMAAL4CACC5AQAA2gIAMLoBAAALABC7AQAA2gIAMLwBAQAAAAHAAUAAmgIAIcEBQACaAgAhzQEBAJkCACHOAQEAmQIAIc8BAQCZAgAh0AEBALACACHRAQEAsAIAIdIBAQCwAgAh0wFAANsCACHUAUAA2wIAIdUBAQCwAgAh1gEBALACACEDAAAACwAgAQAADAAwAgAADQAgDwMAAL4CACAMAAC2AgAgDgAAvwIAILkBAAC9AgAwugEAAA8AELsBAAC9AgAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAhzwEBAJkCACHiAQEAmQIAIekBAQCZAgAh6gEBALACACHrAQEAmQIAIewBIACvAgAhAQAAAA8AIBADAAC-AgAgBwAA2AIAIAoAANkCACC5AQAA1QIAMLoBAAARABC7AQAA1QIAMLwBAQCZAgAhwAFAAJoCACHBAUAAmgIAIc4BAQCZAgAhzwEBAJkCACHhAQAA1gLzASLrAQEAmQIAIfABAQCwAgAh8QEIANMCACH0AQAA1wL0ASIEAwAAmAQAIAcAAIsEACAKAAC7BAAg8AEAAOQCACAQAwAAvgIAIAcAANgCACAKAADZAgAguQEAANUCADC6AQAAEQAQuwEAANUCADC8AQEAAAABwAFAAJoCACHBAUAAmgIAIc4BAQCZAgAhzwEBAJkCACHhAQAA1gLzASLrAQEAmQIAIfABAQAAAAHxAQgA0wIAIfQBAADXAvQBIgMAAAARACABAAASADACAAATACAKCAAA1AIAIAkAANECACC5AQAA0gIAMLoBAAAVABC7AQAA0gIAMLwBAQCZAgAh5gEBAJkCACHtAQEAmQIAIe4BCADTAgAh7wECANACACECCAAAugQAIAkAALkEACAKCAAA1AIAIAkAANECACC5AQAA0gIAMLoBAAAVABC7AQAA0gIAMLwBAQAAAAHmAQEAmQIAIe0BAQCZAgAh7gEIANMCACHvAQIA0AIAIQMAAAAVACABAAAWADACAAAXACABAAAAFQAgDAMAAL4CACAJAADRAgAguQEAAM8CADC6AQAAGgAQuwEAAM8CADC8AQEAmQIAIcABQACaAgAhwQFAAJoCACHPAQEAmQIAIeYBAQCZAgAh5wECANACACHoAQEAsAIAIQMDAACYBAAgCQAAuQQAIOgBAADkAgAgDQMAAL4CACAJAADRAgAguQEAAM8CADC6AQAAGgAQuwEAAM8CADC8AQEAAAABwAFAAJoCACHBAUAAmgIAIc8BAQCZAgAh5gEBAJkCACHnAQIA0AIAIegBAQCwAgAhgQIAAM4CACADAAAAGgAgAQAAGwAwAgAAHAAgAQAAAAcAIAEAAAALACABAAAAEQAgAQAAABoAIAMAAAADACABAAAEADACAAAFACADAAAAEQAgAQAAEgAwAgAAEwAgAQAAAAMAIAEAAAARACADAAAAGgAgAQAAGwAwAgAAHAAgAwAAABUAIAEAABYAMAIAABcAIAEAAAAaACABAAAAFQAgAQAAAAMAIAEAAAABACAJDgAAvwIAILkBAADNAgAwugEAACwAELsBAADNAgAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAh2gEBAJkCACGAAgEAmQIAIQEOAACZBAAgAwAAACwAIAEAAC0AMAIAAAEAIAMAAAAsACABAAAtADACAAABACADAAAALAAgAQAALQAwAgAAAQAgBg4AALgEACC8AQEAAAABwAFAAAAAAcEBQAAAAAHaAQEAAAABgAIBAAAAAQEWAAAxACAFvAEBAAAAAcABQAAAAAHBAUAAAAAB2gEBAAAAAYACAQAAAAEBFgAAMwAwARYAADMAMAYOAACuBAAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAh2gEBAOICACGAAgEA4gIAIQIAAAABACAWAAA2ACAFvAEBAOICACHAAUAA4wIAIcEBQADjAgAh2gEBAOICACGAAgEA4gIAIQIAAAAsACAWAAA4ACACAAAALAAgFgAAOAAgAwAAAAEAIB0AADEAIB4AADYAIAEAAAABACABAAAALAAgAwsAAKsEACAjAACtBAAgJAAArAQAIAi5AQAAzAIAMLoBAAA_ABC7AQAAzAIAMLwBAQCRAgAhwAFAAJICACHBAUAAkgIAIdoBAQCRAgAhgAIBAJECACEDAAAALAAgAQAAPgAwIgAAPwAgAwAAACwAIAEAAC0AMAIAAAEAIAEAAAAFACABAAAABQAgAwAAAAMAIAEAAAQAMAIAAAUAIAMAAAADACABAAAEADACAAAFACADAAAAAwAgAQAABAAwAgAABQAgFAcAAKoEACANAADoAwAgDwAA5wMAIBAAAOkDACC8AQEAAAABwAFAAAAAAcEBQAAAAAHOAQEAAAAB2gEBAAAAAd0BAQAAAAHqAQEAAAAB7gEIAAAAAfUBAQAAAAH2ASAAAAAB9wECAAAAAfgBAADlAwAg-QEBAAAAAfoBAADmAwAg-wEBAAAAAfwBAQAAAAEBFgAARwAgELwBAQAAAAHAAUAAAAABwQFAAAAAAc4BAQAAAAHaAQEAAAAB3QEBAAAAAeoBAQAAAAHuAQgAAAAB9QEBAAAAAfYBIAAAAAH3AQIAAAAB-AEAAOUDACD5AQEAAAAB-gEAAOYDACD7AQEAAAAB_AEBAAAAAQEWAABJADABFgAASQAwFAcAAKkEACANAADMAwAgDwAAywMAIBAAAM0DACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHOAQEA4gIAIdoBAQDiAgAh3QEBAOgCACHqAQEA6AIAIe4BCACVAwAh9QEBAOICACH2ASAA9AIAIfcBAgCGAwAh-AEAAMgDACD5AQEA6AIAIfoBAADJAwAg-wEBAOgCACH8AQEA6AIAIQIAAAAFACAWAABMACAQvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzgEBAOICACHaAQEA4gIAId0BAQDoAgAh6gEBAOgCACHuAQgAlQMAIfUBAQDiAgAh9gEgAPQCACH3AQIAhgMAIfgBAADIAwAg-QEBAOgCACH6AQAAyQMAIPsBAQDoAgAh_AEBAOgCACECAAAAAwAgFgAATgAgAgAAAAMAIBYAAE4AIAMAAAAFACAdAABHACAeAABMACABAAAABQAgAQAAAAMAIAoLAACkBAAgIwAApwQAICQAAKYEACA1AAClBAAgNgAAqAQAIN0BAADkAgAg6gEAAOQCACD5AQAA5AIAIPsBAADkAgAg_AEAAOQCACATuQEAAMoCADC6AQAAVQAQuwEAAMoCADC8AQEAkQIAIcABQACSAgAhwQFAAJICACHOAQEAkQIAIdoBAQCRAgAh3QEBAJwCACHqAQEAnAIAIe4BCADBAgAh9QEBAJECACH2ASAApQIAIfcBAgC5AgAh-AEAAMsCACD5AQEAnAIAIfoBAADLAgAg-wEBAJwCACH8AQEAnAIAIQMAAAADACABAABUADAiAABVACADAAAAAwAgAQAABAAwAgAABQAgAQAAABMAIAEAAAATACADAAAAEQAgAQAAEgAwAgAAEwAgAwAAABEAIAEAABIAMAIAABMAIAMAAAARACABAAASADACAAATACANAwAAvQMAIAcAAKoDACAKAACrAwAgvAEBAAAAAcABQAAAAAHBAUAAAAABzgEBAAAAAc8BAQAAAAHhAQAAAPMBAusBAQAAAAHwAQEAAAAB8QEIAAAAAfQBAAAA9AECARYAAF0AIAq8AQEAAAABwAFAAAAAAcEBQAAAAAHOAQEAAAABzwEBAAAAAeEBAAAA8wEC6wEBAAAAAfABAQAAAAHxAQgAAAAB9AEAAAD0AQIBFgAAXwAwARYAAF8AMA0DAAC7AwAgBwAAmQMAIAoAAJoDACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHOAQEA4gIAIc8BAQDiAgAh4QEAAJYD8wEi6wEBAOICACHwAQEA6AIAIfEBCACVAwAh9AEAAJcD9AEiAgAAABMAIBYAAGIAIAq8AQEA4gIAIcABQADjAgAhwQFAAOMCACHOAQEA4gIAIc8BAQDiAgAh4QEAAJYD8wEi6wEBAOICACHwAQEA6AIAIfEBCACVAwAh9AEAAJcD9AEiAgAAABEAIBYAAGQAIAIAAAARACAWAABkACADAAAAEwAgHQAAXQAgHgAAYgAgAQAAABMAIAEAAAARACAGCwAAnwQAICMAAKIEACAkAAChBAAgNQAAoAQAIDYAAKMEACDwAQAA5AIAIA25AQAAwwIAMLoBAABrABC7AQAAwwIAMLwBAQCRAgAhwAFAAJICACHBAUAAkgIAIc4BAQCRAgAhzwEBAJECACHhAQAAxALzASLrAQEAkQIAIfABAQCcAgAh8QEIAMECACH0AQAAxQL0ASIDAAAAEQAgAQAAagAwIgAAawAgAwAAABEAIAEAABIAMAIAABMAIAEAAAAXACABAAAAFwAgAwAAABUAIAEAABYAMAIAABcAIAMAAAAVACABAAAWADACAAAXACADAAAAFQAgAQAAFgAwAgAAFwAgBwgAANgDACAJAACoAwAgvAEBAAAAAeYBAQAAAAHtAQEAAAAB7gEIAAAAAe8BAgAAAAEBFgAAcwAgBbwBAQAAAAHmAQEAAAAB7QEBAAAAAe4BCAAAAAHvAQIAAAABARYAAHUAMAEWAAB1ADAHCAAA1gMAIAkAAKYDACC8AQEA4gIAIeYBAQDiAgAh7QEBAOICACHuAQgAlQMAIe8BAgCGAwAhAgAAABcAIBYAAHgAIAW8AQEA4gIAIeYBAQDiAgAh7QEBAOICACHuAQgAlQMAIe8BAgCGAwAhAgAAABUAIBYAAHoAIAIAAAAVACAWAAB6ACADAAAAFwAgHQAAcwAgHgAAeAAgAQAAABcAIAEAAAAVACAFCwAAmgQAICMAAJ0EACAkAACcBAAgNQAAmwQAIDYAAJ4EACAIuQEAAMACADC6AQAAgQEAELsBAADAAgAwvAEBAJECACHmAQEAkQIAIe0BAQCRAgAh7gEIAMECACHvAQIAuQIAIQMAAAAVACABAACAAQAwIgAAgQEAIAMAAAAVACABAAAWADACAAAXACAPAwAAvgIAIAwAALYCACAOAAC_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_AQAgCrwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIdoBAQDiAgAh2wEBAOICACHcASAA9AIAId0BAQDoAgAh3wEAAPUC3wEi4QEAAPYC4QEi4gEBAOgCACECAAAAtQEAIBYAAMEBACACAAAAtQEAIBYAAMEBACADAAAAsgEAIB0AALoBACAeAAC_AQAgAQAAALIBACABAAAAtQEAIAULAADxAgAgIwAA8wIAICQAAPICACDdAQAA5AIAIOIBAADkAgAgDbkBAACkAgAwugEAAMgBABC7AQAApAIAMLwBAQCRAgAhwAFAAJICACHBAUAAkgIAIdoBAQCRAgAh2wEBAJECACHcASAApQIAId0BAQCcAgAh3wEAAKYC3wEi4QEAAKcC4QEi4gEBAJwCACEDAAAAtQEAIAEAAMcBADAiAADIAQAgAwAAALUBACABAAC2AQAwAgAAsgEAIAEAAAAJACABAAAACQAgAwAAAAcAIAEAAAgAMAIAAAkAIAMAAAAHACABAAAIADACAAAJACADAAAABwAgAQAACAAwAgAACQAgCQMAAPACACC8AQEAAAABvwFAAAAAAcABQAAAAAHBAUAAAAABzwEBAAAAAdcBAQAAAAHYAQEAAAAB2QEBAAAAAQEWAADQAQAgCLwBAQAAAAG_AUAAAAABwAFAAAAAAcEBQAAAAAHPAQEAAAAB1wEBAAAAAdgBAQAAAAHZAQEAAAABARYAANIBADABFgAA0gEAMAkDAADvAgAgvAEBAOICACG_AUAA4wIAIcABQADjAgAhwQFAAOMCACHPAQEA4gIAIdcBAQDiAgAh2AEBAOgCACHZAQEA6AIAIQIAAAAJACAWAADVAQAgCLwBAQDiAgAhvwFAAOMCACHAAUAA4wIAIcEBQADjAgAhzwEBAOICACHXAQEA4gIAIdgBAQDoAgAh2QEBAOgCACECAAAABwAgFgAA1wEAIAIAAAAHACAWAADXAQAgAwAAAAkAIB0AANABACAeAADVAQAgAQAAAAkAIAEAAAAHACAFCwAA7AIAICMAAO4CACAkAADtAgAg2AEAAOQCACDZAQAA5AIAIAu5AQAAowIAMLoBAADeAQAQuwEAAKMCADC8AQEAkQIAIb8BQACSAgAhwAFAAJICACHBAUAAkgIAIc8BAQCRAgAh1wEBAJECACHYAQEAnAIAIdkBAQCcAgAhAwAAAAcAIAEAAN0BADAiAADeAQAgAwAAAAcAIAEAAAgAMAIAAAkAIAEAAAANACABAAAADQAgAwAAAAsAIAEAAAwAMAIAAA0AIAMAAAALACABAAAMADACAAANACADAAAACwAgAQAADAAwAgAADQAgDgMAAOsCACC8AQEAAAABwAFAAAAAAcEBQAAAAAHNAQEAAAABzgEBAAAAAc8BAQAAAAHQAQEAAAAB0QEBAAAAAdIBAQAAAAHTAUAAAAAB1AFAAAAAAdUBAQAAAAHWAQEAAAABARYAAOYBACANvAEBAAAAAcABQAAAAAHBAUAAAAABzQEBAAAAAc4BAQAAAAHPAQEAAAAB0AEBAAAAAdEBAQAAAAHSAQEAAAAB0wFAAAAAAdQBQAAAAAHVAQEAAAAB1gEBAAAAAQEWAADoAQAwARYAAOgBADAOAwAA6gIAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIc0BAQDiAgAhzgEBAOICACHPAQEA4gIAIdABAQDoAgAh0QEBAOgCACHSAQEA6AIAIdMBQADpAgAh1AFAAOkCACHVAQEA6AIAIdYBAQDoAgAhAgAAAA0AIBYAAOsBACANvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzQEBAOICACHOAQEA4gIAIc8BAQDiAgAh0AEBAOgCACHRAQEA6AIAIdIBAQDoAgAh0wFAAOkCACHUAUAA6QIAIdUBAQDoAgAh1gEBAOgCACECAAAACwAgFgAA7QEAIAIAAAALACAWAADtAQAgAwAAAA0AIB0AAOYBACAeAADrAQAgAQAAAA0AIAEAAAALACAKCwAA5QIAICMAAOcCACAkAADmAgAg0AEAAOQCACDRAQAA5AIAINIBAADkAgAg0wEAAOQCACDUAQAA5AIAINUBAADkAgAg1gEAAOQCACAQuQEAAJsCADC6AQAA9AEAELsBAACbAgAwvAEBAJECACHAAUAAkgIAIcEBQACSAgAhzQEBAJECACHOAQEAkQIAIc8BAQCRAgAh0AEBAJwCACHRAQEAnAIAIdIBAQCcAgAh0wFAAJ0CACHUAUAAnQIAIdUBAQCcAgAh1gEBAJwCACEDAAAACwAgAQAA8wEAMCIAAPQBACADAAAACwAgAQAADAAwAgAADQAgCbkBAACYAgAwugEAAPoBABC7AQAAmAIAMLwBAQAAAAG9AQEAmQIAIb4BAQCZAgAhvwFAAJoCACHAAUAAmgIAIcEBQACaAgAhAQAAAPcBACABAAAA9wEAIAm5AQAAmAIAMLoBAAD6AQAQuwEAAJgCADC8AQEAmQIAIb0BAQCZAgAhvgEBAJkCACG_AUAAmgIAIcABQACaAgAhwQFAAJoCACEAAwAAAPoBACABAAD7AQAwAgAA9wEAIAMAAAD6AQAgAQAA-wEAMAIAAPcBACADAAAA-gEAIAEAAPsBADACAAD3AQAgBrwBAQAAAAG9AQEAAAABvgEBAAAAAb8BQAAAAAHAAUAAAAABwQFAAAAAAQEWAAD_AQAgBrwBAQAAAAG9AQEAAAABvgEBAAAAAb8BQAAAAAHAAUAAAAABwQFAAAAAAQEWAACBAgAwARYAAIECADAGvAEBAOICACG9AQEA4gIAIb4BAQDiAgAhvwFAAOMCACHAAUAA4wIAIcEBQADjAgAhAgAAAPcBACAWAACEAgAgBrwBAQDiAgAhvQEBAOICACG-AQEA4gIAIb8BQADjAgAhwAFAAOMCACHBAUAA4wIAIQIAAAD6AQAgFgAAhgIAIAIAAAD6AQAgFgAAhgIAIAMAAAD3AQAgHQAA_wEAIB4AAIQCACABAAAA9wEAIAEAAAD6AQAgAwsAAN8CACAjAADhAgAgJAAA4AIAIAm5AQAAkAIAMLoBAACNAgAQuwEAAJACADC8AQEAkQIAIb0BAQCRAgAhvgEBAJECACG_AUAAkgIAIcABQACSAgAhwQFAAJICACEDAAAA-gEAIAEAAIwCADAiAACNAgAgAwAAAPoBACABAAD7AQAwAgAA9wEAIAm5AQAAkAIAMLoBAACNAgAQuwEAAJACADC8AQEAkQIAIb0BAQCRAgAhvgEBAJECACG_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AgAwugEAAA8AELsBAAC9AgAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAhzwEBAJkCACHiAQEAmQIAIekBAQCZAgAh6gEBALACACHrAQEAmQIAIewBIACvAgAhggIAAA8AIIMCAAAPACAD4wEAABEAIOQBAAARACDlAQAAEQAgA-MBAAAaACDkAQAAGgAg5QEAABoAIAq5AQAAuAIAMLoBAACvAQAQuwEAALgCADC8AQEAkQIAIcABQACSAgAhwQFAAJICACHPAQEAkQIAIeYBAQCRAgAh5wECALkCACHoAQEAnAIAIQ0LAACUAgAgIwAAlAIAICQAAJQCACA1AAC7AgAgNgAAlAIAIMIBAgAAAAHDAQIAAAAExAECAAAABMUBAgAAAAHGAQIAAAABxwECAAAAAcgBAgAAAAHJAQIAugIAIQ0LAACUAgAgIwAAlAIAICQAAJQCACA1AAC7AgAgNgAAlAIAIMIBAgAAAAHDAQIAAAAExAECAAAABMUBAgAAAAHGAQIAAAABxwECAAAAAcgBAgAAAAHJAQIAugIAIQjCAQgAAAABwwEIAAAABMQBCAAAAATFAQgAAAABxgEIAAAAAccBCAAAAAHIAQgAAAAByQEIALsCACEMuQEAALwCADC6AQAAmQEAELsBAAC8AgAwvAEBAJECACHAAUAAkgIAIcEBQACSAgAhzwEBAJECACHiAQEAkQIAIekBAQCRAgAh6gEBAJwCACHrAQEAkQIAIewBIAClAgAhDwMAAL4CACAMAAC2AgAgDgAAvwIAILkBAAC9AgAwugEAAA8AELsBAAC9AgAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAhzwEBAJkCACHiAQEAmQIAIekBAQCZAgAh6gEBALACACHrAQEAmQIAIewBIACvAgAhFAQAALMCACAFAAC0AgAgBgAAtQIAIAwAALYCACANAAC3AgAguQEAAK4CADC6AQAAtQEAELsBAACuAgAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAh2gEBAJkCACHbAQEAmQIAIdwBIACvAgAh3QEBALACACHfAQAAsQLfASLhAQAAsgLhASLiAQEAsAIAIYICAAC1AQAggwIAALUBACAD4wEAAAMAIOQBAAADACDlAQAAAwAgCLkBAADAAgAwugEAAIEBABC7AQAAwAIAMLwBAQCRAgAh5gEBAJECACHtAQEAkQIAIe4BCADBAgAh7wECALkCACENCwAAlAIAICMAALsCACAkAAC7AgAgNQAAuwIAIDYAALsCACDCAQgAAAABwwEIAAAABMQBCAAAAATFAQgAAAABxgEIAAAAAccBCAAAAAHIAQgAAAAByQEIAMICACENCwAAlAIAICMAALsCACAkAAC7AgAgNQAAuwIAIDYAALsCACDCAQgAAAABwwEIAAAABMQBCAAAAATFAQgAAAABxgEIAAAAAccBCAAAAAHIAQgAAAAByQEIAMICACENuQEAAMMCADC6AQAAawAQuwEAAMMCADC8AQEAkQIAIcABQACSAgAhwQFAAJICACHOAQEAkQIAIc8BAQCRAgAh4QEAAMQC8wEi6wEBAJECACHwAQEAnAIAIfEBCADBAgAh9AEAAMUC9AEiBwsAAJQCACAjAADJAgAgJAAAyQIAIMIBAAAA8wECwwEAAADzAQjEAQAAAPMBCMkBAADIAvMBIgcLAACUAgAgIwAAxwIAICQAAMcCACDCAQAAAPQBAsMBAAAA9AEIxAEAAAD0AQjJAQAAxgL0ASIHCwAAlAIAICMAAMcCACAkAADHAgAgwgEAAAD0AQLDAQAAAPQBCMQBAAAA9AEIyQEAAMYC9AEiBMIBAAAA9AECwwEAAAD0AQjEAQAAAPQBCMkBAADHAvQBIgcLAACUAgAgIwAAyQIAICQAAMkCACDCAQAAAPMBAsMBAAAA8wEIxAEAAADzAQjJAQAAyALzASIEwgEAAADzAQLDAQAAAPMBCMQBAAAA8wEIyQEAAMkC8wEiE7kBAADKAgAwugEAAFUAELsBAADKAgAwvAEBAJECACHAAUAAkgIAIcEBQACSAgAhzgEBAJECACHaAQEAkQIAId0BAQCcAgAh6gEBAJwCACHuAQgAwQIAIfUBAQCRAgAh9gEgAKUCACH3AQIAuQIAIfgBAADLAgAg-QEBAJwCACH6AQAAywIAIPsBAQCcAgAh_AEBAJwCACEEwgEBAAAABf0BAQAAAAH-AQEAAAAE_wEBAAAABAi5AQAAzAIAMLoBAAA_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_AQAIIQCAAD6BAAghQIAAPsEACCKAgAAsgEAIAMdAAD5BAAghAIAAPoEACCKAgAAsgEAIAAAAAUdAAD0BAAgHgAA9wQAIIQCAAD1BAAghQIAAPYEACCKAgAAsgEAIAMdAAD0BAAghAIAAPUEACCKAgAAsgEAIAAAAAGHAiAAAAABAYcCAAAA3wECAYcCAAAA4QECCx0AAPgDADAeAAD9AwAwhAIAAPkDADCFAgAA-gMAMIYCAAD7AwAghwIAAPwDADCIAgAA_AMAMIkCAAD8AwAwigIAAPwDADCLAgAA_gMAMIwCAAD_AwAwCx0AAOwDADAeAADxAwAwhAIAAO0DADCFAgAA7gMAMIYCAADvAwAghwIAAPADADCIAgAA8AMAMIkCAADwAwAwigIAAPADADCLAgAA8gMAMIwCAADzAwAwBx0AAKwDACAeAACvAwAghAIAAK0DACCFAgAArgMAIIgCAAAPACCJAgAADwAgigIAAIQBACALHQAAiwMAMB4AAJADADCEAgAAjAMAMIUCAACNAwAwhgIAAI4DACCHAgAAjwMAMIgCAACPAwAwiQIAAI8DADCKAgAAjwMAMIsCAACRAwAwjAIAAJIDADALHQAA_AIAMB4AAIEDADCEAgAA_QIAMIUCAAD-AgAwhgIAAP8CACCHAgAAgAMAMIgCAACAAwAwiQIAAIADADCKAgAAgAMAMIsCAACCAwAwjAIAAIMDADAHCQAAigMAILwBAQAAAAHAAUAAAAABwQFAAAAAAeYBAQAAAAHnAQIAAAAB6AEBAAAAAQIAAAAcACAdAACJAwAgAwAAABwAIB0AAIkDACAeAACHAwAgARYAAPMEADANAwAAvgIAIAkAANECACC5AQAAzwIAMLoBAAAaABC7AQAAzwIAMLwBAQAAAAHAAUAAmgIAIcEBQACaAgAhzwEBAJkCACHmAQEAmQIAIecBAgDQAgAh6AEBALACACGBAgAAzgIAIAIAAAAcACAWAACHAwAgAgAAAIQDACAWAACFAwAgCrkBAACDAwAwugEAAIQDABC7AQAAgwMAMLwBAQCZAgAhwAFAAJoCACHBAUAAmgIAIc8BAQCZAgAh5gEBAJkCACHnAQIA0AIAIegBAQCwAgAhCrkBAACDAwAwugEAAIQDABC7AQAAgwMAMLwBAQCZAgAhwAFAAJoCACHBAUAAmgIAIc8BAQCZAgAh5gEBAJkCACHnAQIA0AIAIegBAQCwAgAhBrwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIeYBAQDiAgAh5wECAIYDACHoAQEA6AIAIQWHAgIAAAABjgICAAAAAY8CAgAAAAGQAgIAAAABkQICAAAAAQcJAACIAwAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAh5gEBAOICACHnAQIAhgMAIegBAQDoAgAhBR0AAO4EACAeAADxBAAghAIAAO8EACCFAgAA8AQAIIoCAAAFACAHCQAAigMAILwBAQAAAAHAAUAAAAABwQFAAAAAAeYBAQAAAAHnAQIAAAAB6AEBAAAAAQMdAADuBAAghAIAAO8EACCKAgAABQAgCwcAAKoDACAKAACrAwAgvAEBAAAAAcABQAAAAAHBAUAAAAABzgEBAAAAAeEBAAAA8wEC6wEBAAAAAfABAQAAAAHxAQgAAAAB9AEAAAD0AQICAAAAEwAgHQAAqQMAIAMAAAATACAdAACpAwAgHgAAmAMAIAEWAADtBAAwEAMAAL4CACAHAADYAgAgCgAA2QIAILkBAADVAgAwugEAABEAELsBAADVAgAwvAEBAAAAAcABQACaAgAhwQFAAJoCACHOAQEAmQIAIc8BAQCZAgAh4QEAANYC8wEi6wEBAJkCACHwAQEAAAAB8QEIANMCACH0AQAA1wL0ASICAAAAEwAgFgAAmAMAIAIAAACTAwAgFgAAlAMAIA25AQAAkgMAMLoBAACTAwAQuwEAAJIDADC8AQEAmQIAIcABQACaAgAhwQFAAJoCACHOAQEAmQIAIc8BAQCZAgAh4QEAANYC8wEi6wEBAJkCACHwAQEAsAIAIfEBCADTAgAh9AEAANcC9AEiDbkBAACSAwAwugEAAJMDABC7AQAAkgMAMLwBAQCZAgAhwAFAAJoCACHBAUAAmgIAIc4BAQCZAgAhzwEBAJkCACHhAQAA1gLzASLrAQEAmQIAIfABAQCwAgAh8QEIANMCACH0AQAA1wL0ASIJvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzgEBAOICACHhAQAAlgPzASLrAQEA4gIAIfABAQDoAgAh8QEIAJUDACH0AQAAlwP0ASIFhwIIAAAAAY4CCAAAAAGPAggAAAABkAIIAAAAAZECCAAAAAEBhwIAAADzAQIBhwIAAAD0AQILBwAAmQMAIAoAAJoDACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHOAQEA4gIAIeEBAACWA_MBIusBAQDiAgAh8AEBAOgCACHxAQgAlQMAIfQBAACXA_QBIgUdAADiBAAgHgAA6wQAIIQCAADjBAAghQIAAOoEACCKAgAAhAEAIAsdAACbAwAwHgAAoAMAMIQCAACcAwAwhQIAAJ0DADCGAgAAngMAIIcCAACfAwAwiAIAAJ8DADCJAgAAnwMAMIoCAACfAwAwiwIAAKEDADCMAgAAogMAMAUJAACoAwAgvAEBAAAAAeYBAQAAAAHuAQgAAAAB7wECAAAAAQIAAAAXACAdAACnAwAgAwAAABcAIB0AAKcDACAeAAClAwAgARYAAOkEADAKCAAA1AIAIAkAANECACC5AQAA0gIAMLoBAAAVABC7AQAA0gIAMLwBAQAAAAHmAQEAmQIAIe0BAQCZAgAh7gEIANMCACHvAQIA0AIAIQIAAAAXACAWAAClAwAgAgAAAKMDACAWAACkAwAgCLkBAACiAwAwugEAAKMDABC7AQAAogMAMLwBAQCZAgAh5gEBAJkCACHtAQEAmQIAIe4BCADTAgAh7wECANACACEIuQEAAKIDADC6AQAAowMAELsBAACiAwAwvAEBAJkCACHmAQEAmQIAIe0BAQCZAgAh7gEIANMCACHvAQIA0AIAIQS8AQEA4gIAIeYBAQDiAgAh7gEIAJUDACHvAQIAhgMAIQUJAACmAwAgvAEBAOICACHmAQEA4gIAIe4BCACVAwAh7wECAIYDACEFHQAA5AQAIB4AAOcEACCEAgAA5QQAIIUCAADmBAAgigIAAAUAIAUJAACoAwAgvAEBAAAAAeYBAQAAAAHuAQgAAAAB7wECAAAAAQMdAADkBAAghAIAAOUEACCKAgAABQAgCwcAAKoDACAKAACrAwAgvAEBAAAAAcABQAAAAAHBAUAAAAABzgEBAAAAAeEBAAAA8wEC6wEBAAAAAfABAQAAAAHxAQgAAAAB9AEAAAD0AQIDHQAA4gQAIIQCAADjBAAgigIAAIQBACAEHQAAmwMAMIQCAACcAwAwhgIAAJ4DACCKAgAAnwMAMAoMAADrAwAgDgAA6gMAILwBAQAAAAHAAUAAAAABwQFAAAAAAeIBAQAAAAHpAQEAAAAB6gEBAAAAAesBAQAAAAHsASAAAAABAgAAAIQBACAdAACsAwAgAwAAAA8AIB0AAKwDACAeAACwAwAgDAAAAA8AIAwAALIDACAOAACxAwAgFgAAsAMAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIeIBAQDiAgAh6QEBAOICACHqAQEA6AIAIesBAQDiAgAh7AEgAPQCACEKDAAAsgMAIA4AALEDACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHiAQEA4gIAIekBAQDiAgAh6gEBAOgCACHrAQEA4gIAIewBIAD0AgAhCx0AAL4DADAeAADDAwAwhAIAAL8DADCFAgAAwAMAMIYCAADBAwAghwIAAMIDADCIAgAAwgMAMIkCAADCAwAwigIAAMIDADCLAgAAxAMAMIwCAADFAwAwCx0AALMDADAeAAC3AwAwhAIAALQDADCFAgAAtQMAMIYCAAC2AwAghwIAAI8DADCIAgAAjwMAMIkCAACPAwAwigIAAI8DADCLAgAAuAMAMIwCAACSAwAwCwMAAL0DACAKAACrAwAgvAEBAAAAAcABQAAAAAHBAUAAAAABzwEBAAAAAeEBAAAA8wEC6wEBAAAAAfABAQAAAAHxAQgAAAAB9AEAAAD0AQICAAAAEwAgHQAAvAMAIAMAAAATACAdAAC8AwAgHgAAugMAIAEWAADhBAAwAgAAABMAIBYAALoDACACAAAAkwMAIBYAALkDACAJvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzwEBAOICACHhAQAAlgPzASLrAQEA4gIAIfABAQDoAgAh8QEIAJUDACH0AQAAlwP0ASILAwAAuwMAIAoAAJoDACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHPAQEA4gIAIeEBAACWA_MBIusBAQDiAgAh8AEBAOgCACHxAQgAlQMAIfQBAACXA_QBIgUdAADcBAAgHgAA3wQAIIQCAADdBAAghQIAAN4EACCKAgAAsgEAIAsDAAC9AwAgCgAAqwMAILwBAQAAAAHAAUAAAAABwQFAAAAAAc8BAQAAAAHhAQAAAPMBAusBAQAAAAHwAQEAAAAB8QEIAAAAAfQBAAAA9AECAx0AANwEACCEAgAA3QQAIIoCAACyAQAgEg0AAOgDACAPAADnAwAgEAAA6QMAILwBAQAAAAHAAUAAAAABwQFAAAAAAdoBAQAAAAHdAQEAAAAB6gEBAAAAAe4BCAAAAAH1AQEAAAAB9gEgAAAAAfcBAgAAAAH4AQAA5QMAIPkBAQAAAAH6AQAA5gMAIPsBAQAAAAH8AQEAAAABAgAAAAUAIB0AAOQDACADAAAABQAgHQAA5AMAIB4AAMoDACABFgAA2wQAMBcHAADYAgAgDQAAtwIAIA8AAN4CACAQAADZAgAguQEAAN0CADC6AQAAAwAQuwEAAN0CADC8AQEAAAABwAFAAJoCACHBAUAAmgIAIc4BAQCZAgAh2gEBAJkCACHdAQEAsAIAIeoBAQCwAgAh7gEIANMCACH1AQEAmQIAIfYBIACvAgAh9wECANACACH4AQAAywIAIPkBAQCwAgAh-gEAAMsCACD7AQEAsAIAIfwBAQCwAgAhAgAAAAUAIBYAAMoDACACAAAAxgMAIBYAAMcDACATuQEAAMUDADC6AQAAxgMAELsBAADFAwAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAhzgEBAJkCACHaAQEAmQIAId0BAQCwAgAh6gEBALACACHuAQgA0wIAIfUBAQCZAgAh9gEgAK8CACH3AQIA0AIAIfgBAADLAgAg-QEBALACACH6AQAAywIAIPsBAQCwAgAh_AEBALACACETuQEAAMUDADC6AQAAxgMAELsBAADFAwAwvAEBAJkCACHAAUAAmgIAIcEBQACaAgAhzgEBAJkCACHaAQEAmQIAId0BAQCwAgAh6gEBALACACHuAQgA0wIAIfUBAQCZAgAh9gEgAK8CACH3AQIA0AIAIfgBAADLAgAg-QEBALACACH6AQAAywIAIPsBAQCwAgAh_AEBALACACEPvAEBAOICACHAAUAA4wIAIcEBQADjAgAh2gEBAOICACHdAQEA6AIAIeoBAQDoAgAh7gEIAJUDACH1AQEA4gIAIfYBIAD0AgAh9wECAIYDACH4AQAAyAMAIPkBAQDoAgAh-gEAAMkDACD7AQEA6AIAIfwBAQDoAgAhAocCAQAAAASNAgEAAAAFAocCAQAAAASNAgEAAAAFEg0AAMwDACAPAADLAwAgEAAAzQMAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIdoBAQDiAgAh3QEBAOgCACHqAQEA6AIAIe4BCACVAwAh9QEBAOICACH2ASAA9AIAIfcBAgCGAwAh-AEAAMgDACD5AQEA6AIAIfoBAADJAwAg-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_wMAMLoBAACABAAQuwEAAP8DADC8AQEAmQIAIb8BQACaAgAhwAFAAJoCACHBAUAAmgIAIc8BAQCZAgAh1wEBAJkCACHYAQEAsAIAIdkBAQCwAgAhC7kBAAD_AwAwugEAAIAEABC7AQAA_wMAMLwBAQCZAgAhvwFAAJoCACHAAUAAmgIAIcEBQACaAgAhzwEBAJkCACHXAQEAmQIAIdgBAQCwAgAh2QEBALACACEHvAEBAOICACG_AUAA4wIAIcABQADjAgAhwQFAAOMCACHXAQEA4gIAIdgBAQDoAgAh2QEBAOgCACEHvAEBAOICACG_AUAA4wIAIcABQADjAgAhwQFAAOMCACHXAQEA4gIAIdgBAQDoAgAh2QEBAOgCACEHvAEBAAAAAb8BQAAAAAHAAUAAAAABwQFAAAAAAdcBAQAAAAHYAQEAAAAB2QEBAAAAAQQdAAD4AwAwhAIAAPkDADCGAgAA-wMAIIoCAAD8AwAwBB0AAOwDADCEAgAA7QMAMIYCAADvAwAgigIAAPADADADHQAArAMAIIQCAACtAwAgigIAAIQBACAEHQAAiwMAMIQCAACMAwAwhgIAAI4DACCKAgAAjwMAMAQdAAD8AgAwhAIAAP0CADCGAgAA_wIAIIoCAACAAwAwAAAEAwAAmAQAIAwAAIwEACAOAACZBAAg6gEAAOQCACAAAAAAAAAAAAAABR0AAMMEACAeAADGBAAghAIAAMQEACCFAgAAxQQAIIoCAACyAQAgAx0AAMMEACCEAgAAxAQAIIoCAACyAQAgBwQAAIkEACAFAACKBAAgBgAAiwQAIAwAAIwEACANAACNBAAg3QEAAOQCACDiAQAA5AIAIAAAAAAAAAAAAAAAAAAAAAAFHQAAvgQAIB4AAMEEACCEAgAAvwQAIIUCAADABAAgigIAAIQBACADHQAAvgQAIIQCAAC_BAAgigIAAIQBACAAAAALHQAArwQAMB4AALMEADCEAgAAsAQAMIUCAACxBAAwhgIAALIEACCHAgAAwgMAMIgCAADCAwAwiQIAAMIDADCKAgAAwgMAMIsCAAC0BAAwjAIAAMUDADASBwAAqgQAIA0AAOgDACAQAADpAwAgvAEBAAAAAcABQAAAAAHBAUAAAAABzgEBAAAAAdoBAQAAAAHdAQEAAAAB6gEBAAAAAe4BCAAAAAH2ASAAAAAB9wECAAAAAfgBAADlAwAg-QEBAAAAAfoBAADmAwAg-wEBAAAAAfwBAQAAAAECAAAABQAgHQAAtwQAIAMAAAAFACAdAAC3BAAgHgAAtgQAIAEWAAC9BAAwAgAAAAUAIBYAALYEACACAAAAxgMAIBYAALUEACAPvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzgEBAOICACHaAQEA4gIAId0BAQDoAgAh6gEBAOgCACHuAQgAlQMAIfYBIAD0AgAh9wECAIYDACH4AQAAyAMAIPkBAQDoAgAh-gEAAMkDACD7AQEA6AIAIfwBAQDoAgAhEgcAAKkEACANAADMAwAgEAAAzQMAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIc4BAQDiAgAh2gEBAOICACHdAQEA6AIAIeoBAQDoAgAh7gEIAJUDACH2ASAA9AIAIfcBAgCGAwAh-AEAAMgDACD5AQEA6AIAIfoBAADJAwAg-wEBAOgCACH8AQEA6AIAIRIHAACqBAAgDQAA6AMAIBAAAOkDACC8AQEAAAABwAFAAAAAAcEBQAAAAAHOAQEAAAAB2gEBAAAAAd0BAQAAAAHqAQEAAAAB7gEIAAAAAfYBIAAAAAH3AQIAAAAB-AEAAOUDACD5AQEAAAAB-gEAAOYDACD7AQEAAAAB_AEBAAAAAQQdAACvBAAwhAIAALAEADCGAgAAsgQAIIoCAADCAwAwCQcAAIsEACANAACNBAAgDwAAvAQAIBAAALsEACDdAQAA5AIAIOoBAADkAgAg-QEAAOQCACD7AQAA5AIAIPwBAADkAgAgBAMAAJgEACAHAACLBAAgCgAAuwQAIPABAADkAgAgAAEOAACZBAAgD7wBAQAAAAHAAUAAAAABwQFAAAAAAc4BAQAAAAHaAQEAAAAB3QEBAAAAAeoBAQAAAAHuAQgAAAAB9gEgAAAAAfcBAgAAAAH4AQAA5QMAIPkBAQAAAAH6AQAA5gMAIPsBAQAAAAH8AQEAAAABCwMAAJcEACAMAADrAwAgvAEBAAAAAcABQAAAAAHBAUAAAAABzwEBAAAAAeIBAQAAAAHpAQEAAAAB6gEBAAAAAesBAQAAAAHsASAAAAABAgAAAIQBACAdAAC-BAAgAwAAAA8AIB0AAL4EACAeAADCBAAgDQAAAA8AIAMAAJYEACAMAACyAwAgFgAAwgQAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIc8BAQDiAgAh4gEBAOICACHpAQEA4gIAIeoBAQDoAgAh6wEBAOICACHsASAA9AIAIQsDAACWBAAgDAAAsgMAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIc8BAQDiAgAh4gEBAOICACHpAQEA4gIAIeoBAQDoAgAh6wEBAOICACHsASAA9AIAIQ4EAACEBAAgBQAAhQQAIAwAAIcEACANAACIBAAgvAEBAAAAAcABQAAAAAHBAUAAAAAB2gEBAAAAAdsBAQAAAAHcASAAAAAB3QEBAAAAAd8BAAAA3wEC4QEAAADhAQLiAQEAAAABAgAAALIBACAdAADDBAAgAwAAALUBACAdAADDBAAgHgAAxwQAIBAAAAC1AQAgBAAA9wIAIAUAAPgCACAMAAD6AgAgDQAA-wIAIBYAAMcEACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHaAQEA4gIAIdsBAQDiAgAh3AEgAPQCACHdAQEA6AIAId8BAAD1At8BIuEBAAD2AuEBIuIBAQDoAgAhDgQAAPcCACAFAAD4AgAgDAAA-gIAIA0AAPsCACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHaAQEA4gIAIdsBAQDiAgAh3AEgAPQCACHdAQEA6AIAId8BAAD1At8BIuEBAAD2AuEBIuIBAQDoAgAhB7wBAQAAAAG_AUAAAAABwAFAAAAAAcEBQAAAAAHXAQEAAAAB2AEBAAAAAdkBAQAAAAEMvAEBAAAAAcABQAAAAAHBAUAAAAABzQEBAAAAAc4BAQAAAAHQAQEAAAAB0QEBAAAAAdIBAQAAAAHTAUAAAAAB1AFAAAAAAdUBAQAAAAHWAQEAAAABBbwBAQAAAAHAAUAAAAABwQFAAAAAAdoBAQAAAAGAAgEAAAABAgAAAAEAIB0AAMoEACAOBAAAhAQAIAUAAIUEACAGAACGBAAgDAAAhwQAILwBAQAAAAHAAUAAAAABwQFAAAAAAdoBAQAAAAHbAQEAAAAB3AEgAAAAAd0BAQAAAAHfAQAAAN8BAuEBAAAA4QEC4gEBAAAAAQIAAACyAQAgHQAAzAQAIAMAAAC1AQAgHQAAzAQAIB4AANAEACAQAAAAtQEAIAQAAPcCACAFAAD4AgAgBgAA-QIAIAwAAPoCACAWAADQBAAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAh2gEBAOICACHbAQEA4gIAIdwBIAD0AgAh3QEBAOgCACHfAQAA9QLfASLhAQAA9gLhASLiAQEA6AIAIQ4EAAD3AgAgBQAA-AIAIAYAAPkCACAMAAD6AgAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAh2gEBAOICACHbAQEA4gIAIdwBIAD0AgAh3QEBAOgCACHfAQAA9QLfASLhAQAA9gLhASLiAQEA6AIAIQa8AQEAAAABwAFAAAAAAcEBQAAAAAHPAQEAAAAB5wECAAAAAegBAQAAAAEMAwAAvQMAIAcAAKoDACC8AQEAAAABwAFAAAAAAcEBQAAAAAHOAQEAAAABzwEBAAAAAeEBAAAA8wEC6wEBAAAAAfABAQAAAAHxAQgAAAAB9AEAAAD0AQICAAAAEwAgHQAA0gQAIAMAAAARACAdAADSBAAgHgAA1gQAIA4AAAARACADAAC7AwAgBwAAmQMAIBYAANYEACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHOAQEA4gIAIc8BAQDiAgAh4QEAAJYD8wEi6wEBAOICACHwAQEA6AIAIfEBCACVAwAh9AEAAJcD9AEiDAMAALsDACAHAACZAwAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzgEBAOICACHPAQEA4gIAIeEBAACWA_MBIusBAQDiAgAh8AEBAOgCACHxAQgAlQMAIfQBAACXA_QBIgS8AQEAAAAB7QEBAAAAAe4BCAAAAAHvAQIAAAABAwAAACwAIB0AAMoEACAeAADaBAAgBwAAACwAIBYAANoEACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHaAQEA4gIAIYACAQDiAgAhBbwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIdoBAQDiAgAhgAIBAOICACEPvAEBAAAAAcABQAAAAAHBAUAAAAAB2gEBAAAAAd0BAQAAAAHqAQEAAAAB7gEIAAAAAfUBAQAAAAH2ASAAAAAB9wECAAAAAfgBAADlAwAg-QEBAAAAAfoBAADmAwAg-wEBAAAAAfwBAQAAAAEOBAAAhAQAIAUAAIUEACAGAACGBAAgDQAAiAQAILwBAQAAAAHAAUAAAAABwQFAAAAAAdoBAQAAAAHbAQEAAAAB3AEgAAAAAd0BAQAAAAHfAQAAAN8BAuEBAAAA4QEC4gEBAAAAAQIAAACyAQAgHQAA3AQAIAMAAAC1AQAgHQAA3AQAIB4AAOAEACAQAAAAtQEAIAQAAPcCACAFAAD4AgAgBgAA-QIAIA0AAPsCACAWAADgBAAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAh2gEBAOICACHbAQEA4gIAIdwBIAD0AgAh3QEBAOgCACHfAQAA9QLfASLhAQAA9gLhASLiAQEA6AIAIQ4EAAD3AgAgBQAA-AIAIAYAAPkCACANAAD7AgAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAh2gEBAOICACHbAQEA4gIAIdwBIAD0AgAh3QEBAOgCACHfAQAA9QLfASLhAQAA9gLhASLiAQEA6AIAIQm8AQEAAAABwAFAAAAAAcEBQAAAAAHPAQEAAAAB4QEAAADzAQLrAQEAAAAB8AEBAAAAAfEBCAAAAAH0AQAAAPQBAgsDAACXBAAgDgAA6gMAILwBAQAAAAHAAUAAAAABwQFAAAAAAc8BAQAAAAHiAQEAAAAB6QEBAAAAAeoBAQAAAAHrAQEAAAAB7AEgAAAAAQIAAACEAQAgHQAA4gQAIBMHAACqBAAgDQAA6AMAIA8AAOcDACC8AQEAAAABwAFAAAAAAcEBQAAAAAHOAQEAAAAB2gEBAAAAAd0BAQAAAAHqAQEAAAAB7gEIAAAAAfUBAQAAAAH2ASAAAAAB9wECAAAAAfgBAADlAwAg-QEBAAAAAfoBAADmAwAg-wEBAAAAAfwBAQAAAAECAAAABQAgHQAA5AQAIAMAAAADACAdAADkBAAgHgAA6AQAIBUAAAADACAHAACpBAAgDQAAzAMAIA8AAMsDACAWAADoBAAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzgEBAOICACHaAQEA4gIAId0BAQDoAgAh6gEBAOgCACHuAQgAlQMAIfUBAQDiAgAh9gEgAPQCACH3AQIAhgMAIfgBAADIAwAg-QEBAOgCACH6AQAAyQMAIPsBAQDoAgAh_AEBAOgCACETBwAAqQQAIA0AAMwDACAPAADLAwAgvAEBAOICACHAAUAA4wIAIcEBQADjAgAhzgEBAOICACHaAQEA4gIAId0BAQDoAgAh6gEBAOgCACHuAQgAlQMAIfUBAQDiAgAh9gEgAPQCACH3AQIAhgMAIfgBAADIAwAg-QEBAOgCACH6AQAAyQMAIPsBAQDoAgAh_AEBAOgCACEEvAEBAAAAAeYBAQAAAAHuAQgAAAAB7wECAAAAAQMAAAAPACAdAADiBAAgHgAA7AQAIA0AAAAPACADAACWBAAgDgAAsQMAIBYAAOwEACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHPAQEA4gIAIeIBAQDiAgAh6QEBAOICACHqAQEA6AIAIesBAQDiAgAh7AEgAPQCACELAwAAlgQAIA4AALEDACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHPAQEA4gIAIeIBAQDiAgAh6QEBAOICACHqAQEA6AIAIesBAQDiAgAh7AEgAPQCACEJvAEBAAAAAcABQAAAAAHBAUAAAAABzgEBAAAAAeEBAAAA8wEC6wEBAAAAAfABAQAAAAHxAQgAAAAB9AEAAAD0AQITBwAAqgQAIA8AAOcDACAQAADpAwAgvAEBAAAAAcABQAAAAAHBAUAAAAABzgEBAAAAAdoBAQAAAAHdAQEAAAAB6gEBAAAAAe4BCAAAAAH1AQEAAAAB9gEgAAAAAfcBAgAAAAH4AQAA5QMAIPkBAQAAAAH6AQAA5gMAIPsBAQAAAAH8AQEAAAABAgAAAAUAIB0AAO4EACADAAAAAwAgHQAA7gQAIB4AAPIEACAVAAAAAwAgBwAAqQQAIA8AAMsDACAQAADNAwAgFgAA8gQAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIc4BAQDiAgAh2gEBAOICACHdAQEA6AIAIeoBAQDoAgAh7gEIAJUDACH1AQEA4gIAIfYBIAD0AgAh9wECAIYDACH4AQAAyAMAIPkBAQDoAgAh-gEAAMkDACD7AQEA6AIAIfwBAQDoAgAhEwcAAKkEACAPAADLAwAgEAAAzQMAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIc4BAQDiAgAh2gEBAOICACHdAQEA6AIAIeoBAQDoAgAh7gEIAJUDACH1AQEA4gIAIfYBIAD0AgAh9wECAIYDACH4AQAAyAMAIPkBAQDoAgAh-gEAAMkDACD7AQEA6AIAIfwBAQDoAgAhBrwBAQAAAAHAAUAAAAABwQFAAAAAAeYBAQAAAAHnAQIAAAAB6AEBAAAAAQ4FAACFBAAgBgAAhgQAIAwAAIcEACANAACIBAAgvAEBAAAAAcABQAAAAAHBAUAAAAAB2gEBAAAAAdsBAQAAAAHcASAAAAAB3QEBAAAAAd8BAAAA3wEC4QEAAADhAQLiAQEAAAABAgAAALIBACAdAAD0BAAgAwAAALUBACAdAAD0BAAgHgAA-AQAIBAAAAC1AQAgBQAA-AIAIAYAAPkCACAMAAD6AgAgDQAA-wIAIBYAAPgEACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHaAQEA4gIAIdsBAQDiAgAh3AEgAPQCACHdAQEA6AIAId8BAAD1At8BIuEBAAD2AuEBIuIBAQDoAgAhDgUAAPgCACAGAAD5AgAgDAAA-gIAIA0AAPsCACC8AQEA4gIAIcABQADjAgAhwQFAAOMCACHaAQEA4gIAIdsBAQDiAgAh3AEgAPQCACHdAQEA6AIAId8BAAD1At8BIuEBAAD2AuEBIuIBAQDoAgAhDgQAAIQEACAGAACGBAAgDAAAhwQAIA0AAIgEACC8AQEAAAABwAFAAAAAAcEBQAAAAAHaAQEAAAAB2wEBAAAAAdwBIAAAAAHdAQEAAAAB3wEAAADfAQLhAQAAAOEBAuIBAQAAAAECAAAAsgEAIB0AAPkEACADAAAAtQEAIB0AAPkEACAeAAD9BAAgEAAAALUBACAEAAD3AgAgBgAA-QIAIAwAAPoCACANAAD7AgAgFgAA_QQAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIdoBAQDiAgAh2wEBAOICACHcASAA9AIAId0BAQDoAgAh3wEAAPUC3wEi4QEAAPYC4QEi4gEBAOgCACEOBAAA9wIAIAYAAPkCACAMAAD6AgAgDQAA-wIAILwBAQDiAgAhwAFAAOMCACHBAUAA4wIAIdoBAQDiAgAh2wEBAOICACHcASAA9AIAId0BAQDoAgAh3wEAAPUC3wEi4QEAAPYC4QEi4gEBAOgCACECCwAODgYCBQcAAwsADQ0mCg8AARAnCAQDAAQLAAwMIwcOIgIGBAoFBQ4GBhADCwALDBQHDR0KAQMABAEDAAQEAwAEBwADChgICwAJAggABwkAAgEKGQACAwAECQACBAQeAAUfAAwgAA0hAAIMJQAOJAACDSgAECkAAQ4qAAAAAAMLABMjABQkABUAAAADCwATIwAUJAAVAgcAAw8AAQIHAAMPAAEFCwAaIwAdJAAeNQAbNgAcAAAAAAAFCwAaIwAdJAAeNQAbNgAcAgMABAcAAwIDAAQHAAMFCwAjIwAmJAAnNQAkNgAlAAAAAAAFCwAjIwAmJAAnNQAkNgAlAggABwkAAgIIAAcJAAIFCwAsIwAvJAAwNQAtNgAuAAAAAAAFCwAsIwAvJAAwNQAtNgAuAQMABAEDAAQDCwA1IwA2JAA3AAAAAwsANSMANiQANwIDAAQJAAICAwAECQACBQsAPCMAPyQAQDUAPTYAPgAAAAAABQsAPCMAPyQAQDUAPTYAPgAAAwsARSMARiQARwAAAAMLAEUjAEYkAEcBAwAEAQMABAMLAEwjAE0kAE4AAAADCwBMIwBNJABOAQMABAEDAAQDCwBTIwBUJABVAAAAAwsAUyMAVCQAVQAAAAMLAFsjAFwkAF0AAAADCwBbIwBcJABdEQIBEisBEy4BFC8BFTABFzIBGDQPGTUQGjcBGzkPHDoRHzsBIDwBIT0PJUASJkEWJ0ICKEMCKUQCKkUCK0YCLEgCLUoPLksXL00CME8PMVAYMlECM1ICNFMPN1YZOFcfOVgHOlkHO1oHPFsHPVwHPl4HP2APQGEgQWMHQmUPQ2YhRGcHRWgHRmkPR2wiSG0oSW4ISm8IS3AITHEITXIITnQIT3YPUHcpUXkIUnsPU3wqVH0IVX4IVn8PV4IBK1iDATFZhQEDWoYBA1uIAQNciQEDXYoBA16MAQNfjgEPYI8BMmGRAQNikwEPY5QBM2SVAQNllgEDZpcBD2eaATRomwE4aZwBCmqdAQprngEKbJ8BCm2gAQpuogEKb6QBD3ClATlxpwEKcqkBD3OqATp0qwEKdawBCnatAQ93sAE7eLEBQXmzAQR6tAEEe7cBBHy4AQR9uQEEfrsBBH-9AQ-AAb4BQoEBwAEEggHCAQ-DAcMBQ4QBxAEEhQHFAQSGAcYBD4cByQFEiAHKAUiJAcsBBYoBzAEFiwHNAQWMAc4BBY0BzwEFjgHRAQWPAdMBD5AB1AFJkQHWAQWSAdgBD5MB2QFKlAHaAQWVAdsBBZYB3AEPlwHfAUuYAeABT5kB4QEGmgHiAQabAeMBBpwB5AEGnQHlAQaeAecBBp8B6QEPoAHqAVChAewBBqIB7gEPowHvAVGkAfABBqUB8QEGpgHyAQ-nAfUBUqgB9gFWqQH4AVeqAfkBV6sB_AFXrAH9AVetAf4BV64BgAJXrwGCAg-wAYMCWLEBhQJXsgGHAg-zAYgCWbQBiQJXtQGKAle2AYsCD7cBjgJauAGPAl4"
+  strings: JSON.parse('["where","orderBy","cursor","user","sessions","accounts","provider","meals","_count","category","meal","reviews","items","order","orderItems","orders","providerProfile","blogs","Blogs.findUnique","Blogs.findUniqueOrThrow","Blogs.findFirst","Blogs.findFirstOrThrow","Blogs.findMany","data","Blogs.createOne","Blogs.createMany","Blogs.createManyAndReturn","Blogs.updateOne","Blogs.updateMany","Blogs.updateManyAndReturn","create","update","Blogs.upsertOne","Blogs.deleteOne","Blogs.deleteMany","having","_avg","_sum","_min","_max","Blogs.groupBy","Blogs.aggregate","Category.findUnique","Category.findUniqueOrThrow","Category.findFirst","Category.findFirstOrThrow","Category.findMany","Category.createOne","Category.createMany","Category.createManyAndReturn","Category.updateOne","Category.updateMany","Category.updateManyAndReturn","Category.upsertOne","Category.deleteOne","Category.deleteMany","Category.groupBy","Category.aggregate","Meal.findUnique","Meal.findUniqueOrThrow","Meal.findFirst","Meal.findFirstOrThrow","Meal.findMany","Meal.createOne","Meal.createMany","Meal.createManyAndReturn","Meal.updateOne","Meal.updateMany","Meal.updateManyAndReturn","Meal.upsertOne","Meal.deleteOne","Meal.deleteMany","Meal.groupBy","Meal.aggregate","Order.findUnique","Order.findUniqueOrThrow","Order.findFirst","Order.findFirstOrThrow","Order.findMany","Order.createOne","Order.createMany","Order.createManyAndReturn","Order.updateOne","Order.updateMany","Order.updateManyAndReturn","Order.upsertOne","Order.deleteOne","Order.deleteMany","Order.groupBy","Order.aggregate","OrderItem.findUnique","OrderItem.findUniqueOrThrow","OrderItem.findFirst","OrderItem.findFirstOrThrow","OrderItem.findMany","OrderItem.createOne","OrderItem.createMany","OrderItem.createManyAndReturn","OrderItem.updateOne","OrderItem.updateMany","OrderItem.updateManyAndReturn","OrderItem.upsertOne","OrderItem.deleteOne","OrderItem.deleteMany","OrderItem.groupBy","OrderItem.aggregate","ProviderProfile.findUnique","ProviderProfile.findUniqueOrThrow","ProviderProfile.findFirst","ProviderProfile.findFirstOrThrow","ProviderProfile.findMany","ProviderProfile.createOne","ProviderProfile.createMany","ProviderProfile.createManyAndReturn","ProviderProfile.updateOne","ProviderProfile.updateMany","ProviderProfile.updateManyAndReturn","ProviderProfile.upsertOne","ProviderProfile.deleteOne","ProviderProfile.deleteMany","ProviderProfile.groupBy","ProviderProfile.aggregate","Review.findUnique","Review.findUniqueOrThrow","Review.findFirst","Review.findFirstOrThrow","Review.findMany","Review.createOne","Review.createMany","Review.createManyAndReturn","Review.updateOne","Review.updateMany","Review.updateManyAndReturn","Review.upsertOne","Review.deleteOne","Review.deleteMany","Review.groupBy","Review.aggregate","User.findUnique","User.findUniqueOrThrow","User.findFirst","User.findFirstOrThrow","User.findMany","User.createOne","User.createMany","User.createManyAndReturn","User.updateOne","User.updateMany","User.updateManyAndReturn","User.upsertOne","User.deleteOne","User.deleteMany","User.groupBy","User.aggregate","Session.findUnique","Session.findUniqueOrThrow","Session.findFirst","Session.findFirstOrThrow","Session.findMany","Session.createOne","Session.createMany","Session.createManyAndReturn","Session.updateOne","Session.updateMany","Session.updateManyAndReturn","Session.upsertOne","Session.deleteOne","Session.deleteMany","Session.groupBy","Session.aggregate","Account.findUnique","Account.findUniqueOrThrow","Account.findFirst","Account.findFirstOrThrow","Account.findMany","Account.createOne","Account.createMany","Account.createManyAndReturn","Account.updateOne","Account.updateMany","Account.updateManyAndReturn","Account.upsertOne","Account.deleteOne","Account.deleteMany","Account.groupBy","Account.aggregate","Verification.findUnique","Verification.findUniqueOrThrow","Verification.findFirst","Verification.findFirstOrThrow","Verification.findMany","Verification.createOne","Verification.createMany","Verification.createManyAndReturn","Verification.updateOne","Verification.updateMany","Verification.updateManyAndReturn","Verification.upsertOne","Verification.deleteOne","Verification.deleteMany","Verification.groupBy","Verification.aggregate","AND","OR","NOT","id","identifier","value","expiresAt","createdAt","updatedAt","equals","in","notIn","lt","lte","gt","gte","not","contains","startsWith","endsWith","accountId","providerId","userId","accessToken","refreshToken","idToken","accessTokenExpiresAt","refreshTokenExpiresAt","scope","password","token","ipAddress","userAgent","name","email","emailVerified","image","Role","role","UserStatus","status","phone","every","some","none","mealId","rating","comment","shopName","description","address","isOpen","orderId","price","quantity","orderNumber","totalAmount","OrderStatus","PaymentType","paymentType","categoryId","isAvailable","calories","ingredients","cuisine","dietary","mealType","spiceLevel","has","hasEvery","hasSome","slug","title","content","thumbnail","unique_user_meal_review","is","isNot","connectOrCreate","upsert","createMany","set","disconnect","delete","connect","updateMany","deleteMany","push","increment","decrement","multiply","divide"]'),
+  graph: "twVosAEMAwAA2gIAIMoBAADrAgAwywEAACcAEMwBAADrAgAwzQECAAAAAdEBQAC1AgAh0gFAALUCACHgAQEAtAIAIZECAQAAAAGSAgEAtAIAIZMCAQC0AgAhlAIBAMsCACEBAAAAAQAgDAMAANoCACDKAQAA_AIAMMsBAAADABDMAQAA_AIAMM0BAQC0AgAh0AFAALUCACHRAUAAtQIAIdIBQAC1AgAh4AEBALQCACHoAQEAtAIAIekBAQDLAgAh6gEBAMsCACEDAwAAxQQAIOkBAACCAwAg6gEAAIIDACAMAwAA2gIAIMoBAAD8AgAwywEAAAMAEMwBAAD8AgAwzQEBAAAAAdABQAC1AgAh0QFAALUCACHSAUAAtQIAIeABAQC0AgAh6AEBAAAAAekBAQDLAgAh6gEBAMsCACEDAAAAAwAgAQAABAAwAgAABQAgEQMAANoCACDKAQAA-gIAMMsBAAAHABDMAQAA-gIAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAId4BAQC0AgAh3wEBALQCACHgAQEAtAIAIeEBAQDLAgAh4gEBAMsCACHjAQEAywIAIeQBQAD7AgAh5QFAAPsCACHmAQEAywIAIecBAQDLAgAhCAMAAMUEACDhAQAAggMAIOIBAACCAwAg4wEAAIIDACDkAQAAggMAIOUBAACCAwAg5gEAAIIDACDnAQAAggMAIBEDAADaAgAgygEAAPoCADDLAQAABwAQzAEAAPoCADDNAQEAAAAB0QFAALUCACHSAUAAtQIAId4BAQC0AgAh3wEBALQCACHgAQEAtAIAIeEBAQDLAgAh4gEBAMsCACHjAQEAywIAIeQBQAD7AgAh5QFAAPsCACHmAQEAywIAIecBAQDLAgAhAwAAAAcAIAEAAAgAMAIAAAkAIA8DAADaAgAgBwAA2wIAIA8AANECACDKAQAA2QIAMMsBAAALABDMAQAA2QIAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAIeABAQC0AgAh8wEBALQCACH6AQEAtAIAIfsBAQDLAgAh_AEBALQCACH9ASAAygIAIQEAAAALACAXBgAA8QIAIAkAAPkCACALAADSAgAgDgAA8gIAIMoBAAD4AgAwywEAAA0AEMwBAAD4AgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh3wEBALQCACHrAQEAtAIAIe4BAQDLAgAh-wEBAMsCACH_AQgA7gIAIYYCAQC0AgAhhwIgAMoCACGIAgIA7AIAIYkCAADnAgAgigIBAMsCACGLAgAA5wIAIIwCAQDLAgAhjQIBAMsCACEJBgAAtwQAIAkAAPAEACALAAC5BAAgDgAA7QQAIO4BAACCAwAg-wEAAIIDACCKAgAAggMAIIwCAACCAwAgjQIAAIIDACAXBgAA8QIAIAkAAPkCACALAADSAgAgDgAA8gIAIMoBAAD4AgAwywEAAA0AEMwBAAD4AgAwzQEBAAAAAdEBQAC1AgAh0gFAALUCACHfAQEAtAIAIesBAQC0AgAh7gEBAMsCACH7AQEAywIAIf8BCADuAgAhhgIBALQCACGHAiAAygIAIYgCAgDsAgAhiQIAAOcCACCKAgEAywIAIYsCAADnAgAgjAIBAMsCACGNAgEAywIAIQMAAAANACABAAAOADACAAAPACADAAAADQAgAQAADgAwAgAADwAgAQAAAA0AIAwDAADaAgAgCgAA9QIAIMoBAAD3AgAwywEAABMAEMwBAAD3AgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh4AEBALQCACH3AQEAtAIAIfgBAgDsAgAh-QEBAMsCACEDAwAAxQQAIAoAAO8EACD5AQAAggMAIA0DAADaAgAgCgAA9QIAIMoBAAD3AgAwywEAABMAEMwBAAD3AgAwzQEBAAAAAdEBQAC1AgAh0gFAALUCACHgAQEAtAIAIfcBAQC0AgAh-AECAOwCACH5AQEAywIAIZUCAAD2AgAgAwAAABMAIAEAABQAMAIAABUAIAoKAAD1AgAgDQAA9AIAIMoBAADzAgAwywEAABcAEMwBAADzAgAwzQEBALQCACH3AQEAtAIAIf4BAQC0AgAh_wEIAO4CACGAAgIA7AIAIQIKAADvBAAgDQAA7gQAIAoKAAD1AgAgDQAA9AIAIMoBAADzAgAwywEAABcAEMwBAADzAgAwzQEBAAAAAfcBAQC0AgAh_gEBALQCACH_AQgA7gIAIYACAgDsAgAhAwAAABcAIAEAABgAMAIAABkAIAMAAAAXACABAAAYADACAAAZACABAAAAFwAgAQAAABMAIAEAAAAXACAQAwAA2gIAIAYAAPECACAMAADyAgAgygEAAO0CADDLAQAAHwAQzAEAAO0CADDNAQEAtAIAIdEBQAC1AgAh0gFAALUCACHfAQEAtAIAIeABAQC0AgAh8gEAAO8ChAIi_AEBALQCACGBAgEAywIAIYICCADuAgAhhQIAAPAChQIiBAMAAMUEACAGAAC3BAAgDAAA7QQAIIECAACCAwAgEAMAANoCACAGAADxAgAgDAAA8gIAIMoBAADtAgAwywEAAB8AEMwBAADtAgAwzQEBAAAAAdEBQAC1AgAh0gFAALUCACHfAQEAtAIAIeABAQC0AgAh8gEAAO8ChAIi_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_wEIAAAAAYYCAQAAAAGHAiAAAAABiAICAAAAAYkCAACQBAAgigIBAAAAAYsCAACRBAAgjAIBAAAAAY0CAQAAAAEBFwAAYgAgEM0BAQAAAAHRAUAAAAAB0gFAAAAAAd8BAQAAAAHrAQEAAAAB7gEBAAAAAfsBAQAAAAH_AQgAAAABhgIBAAAAAYcCIAAAAAGIAgIAAAABiQIAAJAEACCKAgEAAAABiwIAAJEEACCMAgEAAAABjQIBAAAAAQEXAABkADABFwAAZAAwFAYAANYEACAJAAD2AwAgCwAA9wMAIA4AAPgDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHfAQEAgAMAIesBAQCAAwAh7gEBAIYDACH7AQEAhgMAIf8BCADAAwAhhgIBAIADACGHAiAAkgMAIYgCAgClAwAhiQIAAPMDACCKAgEAhgMAIYsCAAD0AwAgjAIBAIYDACGNAgEAhgMAIQIAAAAPACAXAABnACAQzQEBAIADACHRAUAAgQMAIdIBQACBAwAh3wEBAIADACHrAQEAgAMAIe4BAQCGAwAh-wEBAIYDACH_AQgAwAMAIYYCAQCAAwAhhwIgAJIDACGIAgIApQMAIYkCAADzAwAgigIBAIYDACGLAgAA9AMAIIwCAQCGAwAhjQIBAIYDACECAAAADQAgFwAAaQAgAgAAAA0AIBcAAGkAIAMAAAAPACAeAABiACAfAABnACABAAAADwAgAQAAAA0AIAoIAADRBAAgJAAA0gQAICUAANUEACAmAADUBAAgJwAA0wQAIO4BAACCAwAg-wEAAIIDACCKAgAAggMAIIwCAACCAwAgjQIAAIIDACATygEAAOYCADDLAQAAcAAQzAEAAOYCADDNAQEArAIAIdEBQACtAgAh0gFAAK0CACHfAQEArAIAIesBAQCsAgAh7gEBALcCACH7AQEAtwIAIf8BCADdAgAhhgIBAKwCACGHAiAAwAIAIYgCAgDVAgAhiQIAAOcCACCKAgEAtwIAIYsCAADnAgAgjAIBALcCACGNAgEAtwIAIQMAAAANACABAABvADAjAABwACADAAAADQAgAQAADgAwAgAADwAgAQAAACEAIAEAAAAhACADAAAAHwAgAQAAIAAwAgAAIQAgAwAAAB8AIAEAACAAMAIAACEAIAMAAAAfACABAAAgADACAAAhACANAwAA6AMAIAYAANUDACAMAADWAwAgzQEBAAAAAdEBQAAAAAHSAUAAAAAB3wEBAAAAAeABAQAAAAHyAQAAAIQCAvwBAQAAAAGBAgEAAAABggIIAAAAAYUCAAAAhQICARcAAHgAIArNAQEAAAAB0QFAAAAAAdIBQAAAAAHfAQEAAAAB4AEBAAAAAfIBAAAAhAIC_AEBAAAAAYECAQAAAAGCAggAAAABhQIAAACFAgIBFwAAegAwARcAAHoAMA0DAADmAwAgBgAAxAMAIAwAAMUDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHfAQEAgAMAIeABAQCAAwAh8gEAAMEDhAIi_AEBAIADACGBAgEAhgMAIYICCADAAwAhhQIAAMIDhQIiAgAAACEAIBcAAH0AIArNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHfAQEAgAMAIeABAQCAAwAh8gEAAMEDhAIi_AEBAIADACGBAgEAhgMAIYICCADAAwAhhQIAAMIDhQIiAgAAAB8AIBcAAH8AIAIAAAAfACAXAAB_ACADAAAAIQAgHgAAeAAgHwAAfQAgAQAAACEAIAEAAAAfACAGCAAAzAQAICQAAM0EACAlAADQBAAgJgAAzwQAICcAAM4EACCBAgAAggMAIA3KAQAA3wIAMMsBAACGAQAQzAEAAN8CADDNAQEArAIAIdEBQACtAgAh0gFAAK0CACHfAQEArAIAIeABAQCsAgAh8gEAAOAChAIi_AEBAKwCACGBAgEAtwIAIYICCADdAgAhhQIAAOEChQIiAwAAAB8AIAEAAIUBADAjAACGAQAgAwAAAB8AIAEAACAAMAIAACEAIAEAAAAZACABAAAAGQAgAwAAABcAIAEAABgAMAIAABkAIAMAAAAXACABAAAYADACAAAZACADAAAAFwAgAQAAGAAwAgAAGQAgBwoAANMDACANAACDBAAgzQEBAAAAAfcBAQAAAAH-AQEAAAAB_wEIAAAAAYACAgAAAAEBFwAAjgEAIAXNAQEAAAAB9wEBAAAAAf4BAQAAAAH_AQgAAAABgAICAAAAAQEXAACQAQAwARcAAJABADAHCgAA0QMAIA0AAIEEACDNAQEAgAMAIfcBAQCAAwAh_gEBAIADACH_AQgAwAMAIYACAgClAwAhAgAAABkAIBcAAJMBACAFzQEBAIADACH3AQEAgAMAIf4BAQCAAwAh_wEIAMADACGAAgIApQMAIQIAAAAXACAXAACVAQAgAgAAABcAIBcAAJUBACADAAAAGQAgHgAAjgEAIB8AAJMBACABAAAAGQAgAQAAABcAIAUIAADHBAAgJAAAyAQAICUAAMsEACAmAADKBAAgJwAAyQQAIAjKAQAA3AIAMMsBAACcAQAQzAEAANwCADDNAQEArAIAIfcBAQCsAgAh_gEBAKwCACH_AQgA3QIAIYACAgDVAgAhAwAAABcAIAEAAJsBADAjAACcAQAgAwAAABcAIAEAABgAMAIAABkAIA8DAADaAgAgBwAA2wIAIA8AANECACDKAQAA2QIAMMsBAAALABDMAQAA2QIAMM0BAQAAAAHRAUAAtQIAIdIBQAC1AgAh4AEBAAAAAfMBAQC0AgAh-gEBALQCACH7AQEAywIAIfwBAQC0AgAh_QEgAMoCACEBAAAAnwEAIAEAAACfAQAgBAMAAMUEACAHAADGBAAgDwAAuAQAIPsBAACCAwAgAwAAAAsAIAEAAKIBADACAACfAQAgAwAAAAsAIAEAAKIBADACAACfAQAgAwAAAAsAIAEAAKIBADACAACfAQAgDAMAAMQEACAHAACVBAAgDwAAlgQAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAeABAQAAAAHzAQEAAAAB-gEBAAAAAfsBAQAAAAH8AQEAAAAB_QEgAAAAAQEXAACmAQAgCc0BAQAAAAHRAUAAAAAB0gFAAAAAAeABAQAAAAHzAQEAAAAB-gEBAAAAAfsBAQAAAAH8AQEAAAAB_QEgAAAAAQEXAACoAQAwARcAAKgBADAMAwAAwwQAIAcAANwDACAPAADdAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh4AEBAIADACHzAQEAgAMAIfoBAQCAAwAh-wEBAIYDACH8AQEAgAMAIf0BIACSAwAhAgAAAJ8BACAXAACrAQAgCc0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIeABAQCAAwAh8wEBAIADACH6AQEAgAMAIfsBAQCGAwAh_AEBAIADACH9ASAAkgMAIQIAAAALACAXAACtAQAgAgAAAAsAIBcAAK0BACADAAAAnwEAIB4AAKYBACAfAACrAQAgAQAAAJ8BACABAAAACwAgBAgAAMAEACAmAADCBAAgJwAAwQQAIPsBAACCAwAgDMoBAADYAgAwywEAALQBABDMAQAA2AIAMM0BAQCsAgAh0QFAAK0CACHSAUAArQIAIeABAQCsAgAh8wEBAKwCACH6AQEArAIAIfsBAQC3AgAh_AEBAKwCACH9ASAAwAIAIQMAAAALACABAACzAQAwIwAAtAEAIAMAAAALACABAACiAQAwAgAAnwEAIAEAAAAVACABAAAAFQAgAwAAABMAIAEAABQAMAIAABUAIAMAAAATACABAAAUADACAAAVACADAAAAEwAgAQAAFAAwAgAAFQAgCQMAAI4EACAKAAC1AwAgzQEBAAAAAdEBQAAAAAHSAUAAAAAB4AEBAAAAAfcBAQAAAAH4AQIAAAAB-QEBAAAAAQEXAAC8AQAgB80BAQAAAAHRAUAAAAAB0gFAAAAAAeABAQAAAAH3AQEAAAAB-AECAAAAAfkBAQAAAAEBFwAAvgEAMAEXAAC-AQAwCQMAAIwEACAKAACzAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh4AEBAIADACH3AQEAgAMAIfgBAgClAwAh-QEBAIYDACECAAAAFQAgFwAAwQEAIAfNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHgAQEAgAMAIfcBAQCAAwAh-AECAKUDACH5AQEAhgMAIQIAAAATACAXAADDAQAgAgAAABMAIBcAAMMBACADAAAAFQAgHgAAvAEAIB8AAMEBACABAAAAFQAgAQAAABMAIAYIAAC7BAAgJAAAvAQAICUAAL8EACAmAAC-BAAgJwAAvQQAIPkBAACCAwAgCsoBAADUAgAwywEAAMoBABDMAQAA1AIAMM0BAQCsAgAh0QFAAK0CACHSAUAArQIAIeABAQCsAgAh9wEBAKwCACH4AQIA1QIAIfkBAQC3AgAhAwAAABMAIAEAAMkBADAjAADKAQAgAwAAABMAIAEAABQAMAIAABUAIBMEAADOAgAgBQAAzwIAIAsAANICACAPAADRAgAgEAAA0AIAIBEAANMCACDKAQAAyQIAMMsBAADQAQAQzAEAAMkCADDNAQEAAAAB0QFAALUCACHSAUAAtQIAIesBAQC0AgAh7AEBAAAAAe0BIADKAgAh7gEBAMsCACHwAQAAzALwASLyAQAAzQLyASLzAQEAywIAIQEAAADNAQAgAQAAAM0BACATBAAAzgIAIAUAAM8CACALAADSAgAgDwAA0QIAIBAAANACACARAADTAgAgygEAAMkCADDLAQAA0AEAEMwBAADJAgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh6wEBALQCACHsAQEAtAIAIe0BIADKAgAh7gEBAMsCACHwAQAAzALwASLyAQAAzQLyASLzAQEAywIAIQgEAAC1BAAgBQAAtgQAIAsAALkEACAPAAC4BAAgEAAAtwQAIBEAALoEACDuAQAAggMAIPMBAACCAwAgAwAAANABACABAADRAQAwAgAAzQEAIAMAAADQAQAgAQAA0QEAMAIAAM0BACADAAAA0AEAIAEAANEBADACAADNAQAgEAQAAK8EACAFAACwBAAgCwAAswQAIA8AALIEACAQAACxBAAgEQAAtAQAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAesBAQAAAAHsAQEAAAAB7QEgAAAAAe4BAQAAAAHwAQAAAPABAvIBAAAA8gEC8wEBAAAAAQEXAADVAQAgCs0BAQAAAAHRAUAAAAAB0gFAAAAAAesBAQAAAAHsAQEAAAAB7QEgAAAAAe4BAQAAAAHwAQAAAPABAvIBAAAA8gEC8wEBAAAAAQEXAADXAQAwARcAANcBADAQBAAAlQMAIAUAAJYDACALAACZAwAgDwAAmAMAIBAAAJcDACARAACaAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh6wEBAIADACHsAQEAgAMAIe0BIACSAwAh7gEBAIYDACHwAQAAkwPwASLyAQAAlAPyASLzAQEAhgMAIQIAAADNAQAgFwAA2gEAIArNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIewBAQCAAwAh7QEgAJIDACHuAQEAhgMAIfABAACTA_ABIvIBAACUA_IBIvMBAQCGAwAhAgAAANABACAXAADcAQAgAgAAANABACAXAADcAQAgAwAAAM0BACAeAADVAQAgHwAA2gEAIAEAAADNAQAgAQAAANABACAFCAAAjwMAICYAAJEDACAnAACQAwAg7gEAAIIDACDzAQAAggMAIA3KAQAAvwIAMMsBAADjAQAQzAEAAL8CADDNAQEArAIAIdEBQACtAgAh0gFAAK0CACHrAQEArAIAIewBAQCsAgAh7QEgAMACACHuAQEAtwIAIfABAADBAvABIvIBAADCAvIBIvMBAQC3AgAhAwAAANABACABAADiAQAwIwAA4wEAIAMAAADQAQAgAQAA0QEAMAIAAM0BACABAAAABQAgAQAAAAUAIAMAAAADACABAAAEADACAAAFACADAAAAAwAgAQAABAAwAgAABQAgAwAAAAMAIAEAAAQAMAIAAAUAIAkDAACOAwAgzQEBAAAAAdABQAAAAAHRAUAAAAAB0gFAAAAAAeABAQAAAAHoAQEAAAAB6QEBAAAAAeoBAQAAAAEBFwAA6wEAIAjNAQEAAAAB0AFAAAAAAdEBQAAAAAHSAUAAAAAB4AEBAAAAAegBAQAAAAHpAQEAAAAB6gEBAAAAAQEXAADtAQAwARcAAO0BADAJAwAAjQMAIM0BAQCAAwAh0AFAAIEDACHRAUAAgQMAIdIBQACBAwAh4AEBAIADACHoAQEAgAMAIekBAQCGAwAh6gEBAIYDACECAAAABQAgFwAA8AEAIAjNAQEAgAMAIdABQACBAwAh0QFAAIEDACHSAUAAgQMAIeABAQCAAwAh6AEBAIADACHpAQEAhgMAIeoBAQCGAwAhAgAAAAMAIBcAAPIBACACAAAAAwAgFwAA8gEAIAMAAAAFACAeAADrAQAgHwAA8AEAIAEAAAAFACABAAAAAwAgBQgAAIoDACAmAACMAwAgJwAAiwMAIOkBAACCAwAg6gEAAIIDACALygEAAL4CADDLAQAA-QEAEMwBAAC-AgAwzQEBAKwCACHQAUAArQIAIdEBQACtAgAh0gFAAK0CACHgAQEArAIAIegBAQCsAgAh6QEBALcCACHqAQEAtwIAIQMAAAADACABAAD4AQAwIwAA-QEAIAMAAAADACABAAAEADACAAAFACABAAAACQAgAQAAAAkAIAMAAAAHACABAAAIADACAAAJACADAAAABwAgAQAACAAwAgAACQAgAwAAAAcAIAEAAAgAMAIAAAkAIA4DAACJAwAgzQEBAAAAAdEBQAAAAAHSAUAAAAAB3gEBAAAAAd8BAQAAAAHgAQEAAAAB4QEBAAAAAeIBAQAAAAHjAQEAAAAB5AFAAAAAAeUBQAAAAAHmAQEAAAAB5wEBAAAAAQEXAACBAgAgDc0BAQAAAAHRAUAAAAAB0gFAAAAAAd4BAQAAAAHfAQEAAAAB4AEBAAAAAeEBAQAAAAHiAQEAAAAB4wEBAAAAAeQBQAAAAAHlAUAAAAAB5gEBAAAAAecBAQAAAAEBFwAAgwIAMAEXAACDAgAwDgMAAIgDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHeAQEAgAMAId8BAQCAAwAh4AEBAIADACHhAQEAhgMAIeIBAQCGAwAh4wEBAIYDACHkAUAAhwMAIeUBQACHAwAh5gEBAIYDACHnAQEAhgMAIQIAAAAJACAXAACGAgAgDc0BAQCAAwAh0QFAAIEDACHSAUAAgQMAId4BAQCAAwAh3wEBAIADACHgAQEAgAMAIeEBAQCGAwAh4gEBAIYDACHjAQEAhgMAIeQBQACHAwAh5QFAAIcDACHmAQEAhgMAIecBAQCGAwAhAgAAAAcAIBcAAIgCACACAAAABwAgFwAAiAIAIAMAAAAJACAeAACBAgAgHwAAhgIAIAEAAAAJACABAAAABwAgCggAAIMDACAmAACFAwAgJwAAhAMAIOEBAACCAwAg4gEAAIIDACDjAQAAggMAIOQBAACCAwAg5QEAAIIDACDmAQAAggMAIOcBAACCAwAgEMoBAAC2AgAwywEAAI8CABDMAQAAtgIAMM0BAQCsAgAh0QFAAK0CACHSAUAArQIAId4BAQCsAgAh3wEBAKwCACHgAQEArAIAIeEBAQC3AgAh4gEBALcCACHjAQEAtwIAIeQBQAC4AgAh5QFAALgCACHmAQEAtwIAIecBAQC3AgAhAwAAAAcAIAEAAI4CADAjAACPAgAgAwAAAAcAIAEAAAgAMAIAAAkAIAnKAQAAswIAMMsBAACVAgAQzAEAALMCADDNAQEAAAABzgEBALQCACHPAQEAtAIAIdABQAC1AgAh0QFAALUCACHSAUAAtQIAIQEAAACSAgAgAQAAAJICACAJygEAALMCADDLAQAAlQIAEMwBAACzAgAwzQEBALQCACHOAQEAtAIAIc8BAQC0AgAh0AFAALUCACHRAUAAtQIAIdIBQAC1AgAhAAMAAACVAgAgAQAAlgIAMAIAAJICACADAAAAlQIAIAEAAJYCADACAACSAgAgAwAAAJUCACABAACWAgAwAgAAkgIAIAbNAQEAAAABzgEBAAAAAc8BAQAAAAHQAUAAAAAB0QFAAAAAAdIBQAAAAAEBFwAAmgIAIAbNAQEAAAABzgEBAAAAAc8BAQAAAAHQAUAAAAAB0QFAAAAAAdIBQAAAAAEBFwAAnAIAMAEXAACcAgAwBs0BAQCAAwAhzgEBAIADACHPAQEAgAMAIdABQACBAwAh0QFAAIEDACHSAUAAgQMAIQIAAACSAgAgFwAAnwIAIAbNAQEAgAMAIc4BAQCAAwAhzwEBAIADACHQAUAAgQMAIdEBQACBAwAh0gFAAIEDACECAAAAlQIAIBcAAKECACACAAAAlQIAIBcAAKECACADAAAAkgIAIB4AAJoCACAfAACfAgAgAQAAAJICACABAAAAlQIAIAMIAAD9AgAgJgAA_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-QEAEMwBAAC-AgAwzQEBAKwCACHQAUAArQIAIdEBQACtAgAh0gFAAK0CACHgAQEArAIAIegBAQCsAgAh6QEBALcCACHqAQEAtwIAIQ3KAQAAvwIAMMsBAADjAQAQzAEAAL8CADDNAQEArAIAIdEBQACtAgAh0gFAAK0CACHrAQEArAIAIewBAQCsAgAh7QEgAMACACHuAQEAtwIAIfABAADBAvABIvIBAADCAvIBIvMBAQC3AgAhBQgAAK8CACAmAADIAgAgJwAAyAIAINMBIAAAAAHaASAAxwIAIQcIAACvAgAgJgAAxgIAICcAAMYCACDTAQAAAPABAtQBAAAA8AEI1QEAAADwAQjaAQAAxQLwASIHCAAArwIAICYAAMQCACAnAADEAgAg0wEAAADyAQLUAQAAAPIBCNUBAAAA8gEI2gEAAMMC8gEiBwgAAK8CACAmAADEAgAgJwAAxAIAINMBAAAA8gEC1AEAAADyAQjVAQAAAPIBCNoBAADDAvIBIgTTAQAAAPIBAtQBAAAA8gEI1QEAAADyAQjaAQAAxALyASIHCAAArwIAICYAAMYCACAnAADGAgAg0wEAAADwAQLUAQAAAPABCNUBAAAA8AEI2gEAAMUC8AEiBNMBAAAA8AEC1AEAAADwAQjVAQAAAPABCNoBAADGAvABIgUIAACvAgAgJgAAyAIAICcAAMgCACDTASAAAAAB2gEgAMcCACEC0wEgAAAAAdoBIADIAgAhEwQAAM4CACAFAADPAgAgCwAA0gIAIA8AANECACAQAADQAgAgEQAA0wIAIMoBAADJAgAwywEAANABABDMAQAAyQIAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAIesBAQC0AgAh7AEBALQCACHtASAAygIAIe4BAQDLAgAh8AEAAMwC8AEi8gEAAM0C8gEi8wEBAMsCACEC0wEgAAAAAdoBIADIAgAhC9MBAQAAAAHUAQEAAAAF1QEBAAAABdYBAQAAAAHXAQEAAAAB2AEBAAAAAdkBAQAAAAHaAQEAvQIAIdsBAQAAAAHcAQEAAAAB3QEBAAAAAQTTAQAAAPABAtQBAAAA8AEI1QEAAADwAQjaAQAAxgLwASIE0wEAAADyAQLUAQAAAPIBCNUBAAAA8gEI2gEAAMQC8gEiA_QBAAADACD1AQAAAwAg9gEAAAMAIAP0AQAABwAg9QEAAAcAIPYBAAAHACARAwAA2gIAIAcAANsCACAPAADRAgAgygEAANkCADDLAQAACwAQzAEAANkCADDNAQEAtAIAIdEBQAC1AgAh0gFAALUCACHgAQEAtAIAIfMBAQC0AgAh-gEBALQCACH7AQEAywIAIfwBAQC0AgAh_QEgAMoCACGWAgAACwAglwIAAAsAIAP0AQAAHwAg9QEAAB8AIPYBAAAfACAD9AEAABMAIPUBAAATACD2AQAAEwAgA_QBAAAnACD1AQAAJwAg9gEAACcAIArKAQAA1AIAMMsBAADKAQAQzAEAANQCADDNAQEArAIAIdEBQACtAgAh0gFAAK0CACHgAQEArAIAIfcBAQCsAgAh-AECANUCACH5AQEAtwIAIQ0IAACvAgAgJAAA1wIAICUAAK8CACAmAACvAgAgJwAArwIAINMBAgAAAAHUAQIAAAAE1QECAAAABNYBAgAAAAHXAQIAAAAB2AECAAAAAdkBAgAAAAHaAQIA1gIAIQ0IAACvAgAgJAAA1wIAICUAAK8CACAmAACvAgAgJwAArwIAINMBAgAAAAHUAQIAAAAE1QECAAAABNYBAgAAAAHXAQIAAAAB2AECAAAAAdkBAgAAAAHaAQIA1gIAIQjTAQgAAAAB1AEIAAAABNUBCAAAAATWAQgAAAAB1wEIAAAAAdgBCAAAAAHZAQgAAAAB2gEIANcCACEMygEAANgCADDLAQAAtAEAEMwBAADYAgAwzQEBAKwCACHRAUAArQIAIdIBQACtAgAh4AEBAKwCACHzAQEArAIAIfoBAQCsAgAh-wEBALcCACH8AQEArAIAIf0BIADAAgAhDwMAANoCACAHAADbAgAgDwAA0QIAIMoBAADZAgAwywEAAAsAEMwBAADZAgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh4AEBALQCACHzAQEAtAIAIfoBAQC0AgAh-wEBAMsCACH8AQEAtAIAIf0BIADKAgAhFQQAAM4CACAFAADPAgAgCwAA0gIAIA8AANECACAQAADQAgAgEQAA0wIAIMoBAADJAgAwywEAANABABDMAQAAyQIAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAIesBAQC0AgAh7AEBALQCACHtASAAygIAIe4BAQDLAgAh8AEAAMwC8AEi8gEAAM0C8gEi8wEBAMsCACGWAgAA0AEAIJcCAADQAQAgA_QBAAANACD1AQAADQAg9gEAAA0AIAjKAQAA3AIAMMsBAACcAQAQzAEAANwCADDNAQEArAIAIfcBAQCsAgAh_gEBAKwCACH_AQgA3QIAIYACAgDVAgAhDQgAAK8CACAkAADXAgAgJQAA1wIAICYAANcCACAnAADXAgAg0wEIAAAAAdQBCAAAAATVAQgAAAAE1gEIAAAAAdcBCAAAAAHYAQgAAAAB2QEIAAAAAdoBCADeAgAhDQgAAK8CACAkAADXAgAgJQAA1wIAICYAANcCACAnAADXAgAg0wEIAAAAAdQBCAAAAATVAQgAAAAE1gEIAAAAAdcBCAAAAAHYAQgAAAAB2QEIAAAAAdoBCADeAgAhDcoBAADfAgAwywEAAIYBABDMAQAA3wIAMM0BAQCsAgAh0QFAAK0CACHSAUAArQIAId8BAQCsAgAh4AEBAKwCACHyAQAA4AKEAiL8AQEArAIAIYECAQC3AgAhggIIAN0CACGFAgAA4QKFAiIHCAAArwIAICYAAOUCACAnAADlAgAg0wEAAACEAgLUAQAAAIQCCNUBAAAAhAII2gEAAOQChAIiBwgAAK8CACAmAADjAgAgJwAA4wIAINMBAAAAhQIC1AEAAACFAgjVAQAAAIUCCNoBAADiAoUCIgcIAACvAgAgJgAA4wIAICcAAOMCACDTAQAAAIUCAtQBAAAAhQII1QEAAACFAgjaAQAA4gKFAiIE0wEAAACFAgLUAQAAAIUCCNUBAAAAhQII2gEAAOMChQIiBwgAAK8CACAmAADlAgAgJwAA5QIAINMBAAAAhAIC1AEAAACEAgjVAQAAAIQCCNoBAADkAoQCIgTTAQAAAIQCAtQBAAAAhAII1QEAAACEAgjaAQAA5QKEAiITygEAAOYCADDLAQAAcAAQzAEAAOYCADDNAQEArAIAIdEBQACtAgAh0gFAAK0CACHfAQEArAIAIesBAQCsAgAh7gEBALcCACH7AQEAtwIAIf8BCADdAgAhhgIBAKwCACGHAiAAwAIAIYgCAgDVAgAhiQIAAOcCACCKAgEAtwIAIYsCAADnAgAgjAIBALcCACGNAgEAtwIAIQTTAQEAAAAFjgIBAAAAAY8CAQAAAASQAgEAAAAECMoBAADoAgAwywEAAFoAEMwBAADoAgAwzQEBAKwCACHRAUAArQIAIdIBQACtAgAh6wEBAKwCACGRAgEArAIAIQkHAADbAgAgygEAAOkCADDLAQAARwAQzAEAAOkCADDNAQEAtAIAIdEBQAC1AgAh0gFAALUCACHrAQEAtAIAIZECAQC0AgAhC8oBAADqAgAwywEAAEEAEMwBAADqAgAwzQECANUCACHRAUAArQIAIdIBQACtAgAh4AEBAKwCACGRAgEArAIAIZICAQCsAgAhkwIBAKwCACGUAgEAtwIAIQwDAADaAgAgygEAAOsCADDLAQAAJwAQzAEAAOsCADDNAQIA7AIAIdEBQAC1AgAh0gFAALUCACHgAQEAtAIAIZECAQC0AgAhkgIBALQCACGTAgEAtAIAIZQCAQDLAgAhCNMBAgAAAAHUAQIAAAAE1QECAAAABNYBAgAAAAHXAQIAAAAB2AECAAAAAdkBAgAAAAHaAQIArwIAIRADAADaAgAgBgAA8QIAIAwAAPICACDKAQAA7QIAMMsBAAAfABDMAQAA7QIAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAId8BAQC0AgAh4AEBALQCACHyAQAA7wKEAiL8AQEAtAIAIYECAQDLAgAhggIIAO4CACGFAgAA8AKFAiII0wEIAAAAAdQBCAAAAATVAQgAAAAE1gEIAAAAAdcBCAAAAAHYAQgAAAAB2QEIAAAAAdoBCADXAgAhBNMBAAAAhAIC1AEAAACEAgjVAQAAAIQCCNoBAADlAoQCIgTTAQAAAIUCAtQBAAAAhQII1QEAAACFAgjaAQAA4wKFAiIRAwAA2gIAIAcAANsCACAPAADRAgAgygEAANkCADDLAQAACwAQzAEAANkCADDNAQEAtAIAIdEBQAC1AgAh0gFAALUCACHgAQEAtAIAIfMBAQC0AgAh-gEBALQCACH7AQEAywIAIfwBAQC0AgAh_QEgAMoCACGWAgAACwAglwIAAAsAIAP0AQAAFwAg9QEAABcAIPYBAAAXACAKCgAA9QIAIA0AAPQCACDKAQAA8wIAMMsBAAAXABDMAQAA8wIAMM0BAQC0AgAh9wEBALQCACH-AQEAtAIAIf8BCADuAgAhgAICAOwCACESAwAA2gIAIAYAAPECACAMAADyAgAgygEAAO0CADDLAQAAHwAQzAEAAO0CADDNAQEAtAIAIdEBQAC1AgAh0gFAALUCACHfAQEAtAIAIeABAQC0AgAh8gEAAO8ChAIi_AEBALQCACGBAgEAywIAIYICCADuAgAhhQIAAPAChQIilgIAAB8AIJcCAAAfACAZBgAA8QIAIAkAAPkCACALAADSAgAgDgAA8gIAIMoBAAD4AgAwywEAAA0AEMwBAAD4AgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh3wEBALQCACHrAQEAtAIAIe4BAQDLAgAh-wEBAMsCACH_AQgA7gIAIYYCAQC0AgAhhwIgAMoCACGIAgIA7AIAIYkCAADnAgAgigIBAMsCACGLAgAA5wIAIIwCAQDLAgAhjQIBAMsCACGWAgAADQAglwIAAA0AIALgAQEAAAAB9wEBAAAAAQwDAADaAgAgCgAA9QIAIMoBAAD3AgAwywEAABMAEMwBAAD3AgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh4AEBALQCACH3AQEAtAIAIfgBAgDsAgAh-QEBAMsCACEXBgAA8QIAIAkAAPkCACALAADSAgAgDgAA8gIAIMoBAAD4AgAwywEAAA0AEMwBAAD4AgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh3wEBALQCACHrAQEAtAIAIe4BAQDLAgAh-wEBAMsCACH_AQgA7gIAIYYCAQC0AgAhhwIgAMoCACGIAgIA7AIAIYkCAADnAgAgigIBAMsCACGLAgAA5wIAIIwCAQDLAgAhjQIBAMsCACELBwAA2wIAIMoBAADpAgAwywEAAEcAEMwBAADpAgAwzQEBALQCACHRAUAAtQIAIdIBQAC1AgAh6wEBALQCACGRAgEAtAIAIZYCAABHACCXAgAARwAgEQMAANoCACDKAQAA-gIAMMsBAAAHABDMAQAA-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_AEBALQCACGBAgEAywIAIYICCADuAgAhhQIAAPAChQIiCc0BAQCAAwAh0QFAAIEDACHSAUAAgQMAId8BAQCAAwAh8gEAAMEDhAIi_AEBAIADACGBAgEAhgMAIYICCADAAwAhhQIAAMIDhQIiBZsCCAAAAAGiAggAAAABowIIAAAAAaQCCAAAAAGlAggAAAABAZsCAAAAhAICAZsCAAAAhQICCwYAAMQDACAMAADFAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh3wEBAIADACHyAQAAwQOEAiL8AQEAgAMAIYECAQCGAwAhggIIAMADACGFAgAAwgOFAiIFHgAAmwUAIB8AAKQFACCYAgAAnAUAIJkCAACjBQAgngIAAJ8BACALHgAAxgMAMB8AAMsDADCYAgAAxwMAMJkCAADIAwAwmgIAAMkDACCbAgAAygMAMJwCAADKAwAwnQIAAMoDADCeAgAAygMAMJ8CAADMAwAwoAIAAM0DADAFCgAA0wMAIM0BAQAAAAH3AQEAAAAB_wEIAAAAAYACAgAAAAECAAAAGQAgHgAA0gMAIAMAAAAZACAeAADSAwAgHwAA0AMAIAEXAACiBQAwCgoAAPUCACANAAD0AgAgygEAAPMCADDLAQAAFwAQzAEAAPMCADDNAQEAAAAB9wEBALQCACH-AQEAtAIAIf8BCADuAgAhgAICAOwCACECAAAAGQAgFwAA0AMAIAIAAADOAwAgFwAAzwMAIAjKAQAAzQMAMMsBAADOAwAQzAEAAM0DADDNAQEAtAIAIfcBAQC0AgAh_gEBALQCACH_AQgA7gIAIYACAgDsAgAhCMoBAADNAwAwywEAAM4DABDMAQAAzQMAMM0BAQC0AgAh9wEBALQCACH-AQEAtAIAIf8BCADuAgAhgAICAOwCACEEzQEBAIADACH3AQEAgAMAIf8BCADAAwAhgAICAKUDACEFCgAA0QMAIM0BAQCAAwAh9wEBAIADACH_AQgAwAMAIYACAgClAwAhBR4AAJ0FACAfAACgBQAgmAIAAJ4FACCZAgAAnwUAIJ4CAAAPACAFCgAA0wMAIM0BAQAAAAH3AQEAAAAB_wEIAAAAAYACAgAAAAEDHgAAnQUAIJgCAACeBQAgngIAAA8AIAsGAADVAwAgDAAA1gMAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAd8BAQAAAAHyAQAAAIQCAvwBAQAAAAGBAgEAAAABggIIAAAAAYUCAAAAhQICAx4AAJsFACCYAgAAnAUAIJ4CAACfAQAgBB4AAMYDADCYAgAAxwMAMJoCAADJAwAgngIAAMoDADAKBwAAlQQAIA8AAJYEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHzAQEAAAAB-gEBAAAAAfsBAQAAAAH8AQEAAAAB_QEgAAAAAQIAAACfAQAgHgAA1wMAIAMAAAALACAeAADXAwAgHwAA2wMAIAwAAAALACAHAADcAwAgDwAA3QMAIBcAANsDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHzAQEAgAMAIfoBAQCAAwAh-wEBAIYDACH8AQEAgAMAIf0BIACSAwAhCgcAANwDACAPAADdAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh8wEBAIADACH6AQEAgAMAIfsBAQCGAwAh_AEBAIADACH9ASAAkgMAIQseAADpAwAwHwAA7gMAMJgCAADqAwAwmQIAAOsDADCaAgAA7AMAIJsCAADtAwAwnAIAAO0DADCdAgAA7QMAMJ4CAADtAwAwnwIAAO8DADCgAgAA8AMAMAseAADeAwAwHwAA4gMAMJgCAADfAwAwmQIAAOADADCaAgAA4QMAIJsCAAC6AwAwnAIAALoDADCdAgAAugMAMJ4CAAC6AwAwnwIAAOMDADCgAgAAvQMAMAsDAADoAwAgDAAA1gMAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAeABAQAAAAHyAQAAAIQCAvwBAQAAAAGBAgEAAAABggIIAAAAAYUCAAAAhQICAgAAACEAIB4AAOcDACADAAAAIQAgHgAA5wMAIB8AAOUDACABFwAAmgUAMAIAAAAhACAXAADlAwAgAgAAAL4DACAXAADkAwAgCc0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIeABAQCAAwAh8gEAAMEDhAIi_AEBAIADACGBAgEAhgMAIYICCADAAwAhhQIAAMIDhQIiCwMAAOYDACAMAADFAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh4AEBAIADACHyAQAAwQOEAiL8AQEAgAMAIYECAQCGAwAhggIIAMADACGFAgAAwgOFAiIFHgAAlQUAIB8AAJgFACCYAgAAlgUAIJkCAACXBQAgngIAAM0BACALAwAA6AMAIAwAANYDACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHgAQEAAAAB8gEAAACEAgL8AQEAAAABgQIBAAAAAYICCAAAAAGFAgAAAIUCAgMeAACVBQAgmAIAAJYFACCeAgAAzQEAIBIJAACSBAAgCwAAkwQAIA4AAJQEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHrAQEAAAAB7gEBAAAAAfsBAQAAAAH_AQgAAAABhgIBAAAAAYcCIAAAAAGIAgIAAAABiQIAAJAEACCKAgEAAAABiwIAAJEEACCMAgEAAAABjQIBAAAAAQIAAAAPACAeAACPBAAgAwAAAA8AIB4AAI8EACAfAAD1AwAgARcAAJQFADAXBgAA8QIAIAkAAPkCACALAADSAgAgDgAA8gIAIMoBAAD4AgAwywEAAA0AEMwBAAD4AgAwzQEBAAAAAdEBQAC1AgAh0gFAALUCACHfAQEAtAIAIesBAQC0AgAh7gEBAMsCACH7AQEAywIAIf8BCADuAgAhhgIBALQCACGHAiAAygIAIYgCAgDsAgAhiQIAAOcCACCKAgEAywIAIYsCAADnAgAgjAIBAMsCACGNAgEAywIAIQIAAAAPACAXAAD1AwAgAgAAAPEDACAXAADyAwAgE8oBAADwAwAwywEAAPEDABDMAQAA8AMAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAId8BAQC0AgAh6wEBALQCACHuAQEAywIAIfsBAQDLAgAh_wEIAO4CACGGAgEAtAIAIYcCIADKAgAhiAICAOwCACGJAgAA5wIAIIoCAQDLAgAhiwIAAOcCACCMAgEAywIAIY0CAQDLAgAhE8oBAADwAwAwywEAAPEDABDMAQAA8AMAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAId8BAQC0AgAh6wEBALQCACHuAQEAywIAIfsBAQDLAgAh_wEIAO4CACGGAgEAtAIAIYcCIADKAgAhiAICAOwCACGJAgAA5wIAIIoCAQDLAgAhiwIAAOcCACCMAgEAywIAIY0CAQDLAgAhD80BAQCAAwAh0QFAAIEDACHSAUAAgQMAIesBAQCAAwAh7gEBAIYDACH7AQEAhgMAIf8BCADAAwAhhgIBAIADACGHAiAAkgMAIYgCAgClAwAhiQIAAPMDACCKAgEAhgMAIYsCAAD0AwAgjAIBAIYDACGNAgEAhgMAIQKbAgEAAAAEoQIBAAAABQKbAgEAAAAEoQIBAAAABRIJAAD2AwAgCwAA9wMAIA4AAPgDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIe4BAQCGAwAh-wEBAIYDACH_AQgAwAMAIYYCAQCAAwAhhwIgAJIDACGIAgIApQMAIYkCAADzAwAgigIBAIYDACGLAgAA9AMAIIwCAQCGAwAhjQIBAIYDACEFHgAAgwUAIB8AAJIFACCYAgAAhAUAIJkCAACRBQAgngIAAEQAIAseAACEBAAwHwAAiAQAMJgCAACFBAAwmQIAAIYEADCaAgAAhwQAIJsCAACsAwAwnAIAAKwDADCdAgAArAMAMJ4CAACsAwAwnwIAAIkEADCgAgAArwMAMAseAAD5AwAwHwAA_QMAMJgCAAD6AwAwmQIAAPsDADCaAgAA_AMAIJsCAADKAwAwnAIAAMoDADCdAgAAygMAMJ4CAADKAwAwnwIAAP4DADCgAgAAzQMAMAUNAACDBAAgzQEBAAAAAf4BAQAAAAH_AQgAAAABgAICAAAAAQIAAAAZACAeAACCBAAgAwAAABkAIB4AAIIEACAfAACABAAgARcAAJAFADACAAAAGQAgFwAAgAQAIAIAAADOAwAgFwAA_wMAIATNAQEAgAMAIf4BAQCAAwAh_wEIAMADACGAAgIApQMAIQUNAACBBAAgzQEBAIADACH-AQEAgAMAIf8BCADAAwAhgAICAKUDACEFHgAAiwUAIB8AAI4FACCYAgAAjAUAIJkCAACNBQAgngIAACEAIAUNAACDBAAgzQEBAAAAAf4BAQAAAAH_AQgAAAABgAICAAAAAQMeAACLBQAgmAIAAIwFACCeAgAAIQAgBwMAAI4EACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHgAQEAAAAB-AECAAAAAfkBAQAAAAECAAAAFQAgHgAAjQQAIAMAAAAVACAeAACNBAAgHwAAiwQAIAEXAACKBQAwAgAAABUAIBcAAIsEACACAAAAsAMAIBcAAIoEACAGzQEBAIADACHRAUAAgQMAIdIBQACBAwAh4AEBAIADACH4AQIApQMAIfkBAQCGAwAhBwMAAIwEACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHgAQEAgAMAIfgBAgClAwAh-QEBAIYDACEFHgAAhQUAIB8AAIgFACCYAgAAhgUAIJkCAACHBQAgngIAAM0BACAHAwAAjgQAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAeABAQAAAAH4AQIAAAAB-QEBAAAAAQMeAACFBQAgmAIAAIYFACCeAgAAzQEAIBIJAACSBAAgCwAAkwQAIA4AAJQEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHrAQEAAAAB7gEBAAAAAfsBAQAAAAH_AQgAAAABhgIBAAAAAYcCIAAAAAGIAgIAAAABiQIAAJAEACCKAgEAAAABiwIAAJEEACCMAgEAAAABjQIBAAAAAQGbAgEAAAAEAZsCAQAAAAQDHgAAgwUAIJgCAACEBQAgngIAAEQAIAQeAACEBAAwmAIAAIUEADCaAgAAhwQAIJ4CAACsAwAwBB4AAPkDADCYAgAA-gMAMJoCAAD8AwAgngIAAMoDADAEHgAA6QMAMJgCAADqAwAwmgIAAOwDACCeAgAA7QMAMAQeAADeAwAwmAIAAN8DADCaAgAA4QMAIJ4CAAC6AwAwDM0BAQAAAAHRAUAAAAAB0gFAAAAAAd4BAQAAAAHfAQEAAAAB4QEBAAAAAeIBAQAAAAHjAQEAAAAB5AFAAAAAAeUBQAAAAAHmAQEAAAAB5wEBAAAAAQIAAAAJACAeAACiBAAgAwAAAAkAIB4AAKIEACAfAAChBAAgARcAAIIFADARAwAA2gIAIMoBAAD6AgAwywEAAAcAEMwBAAD6AgAwzQEBAAAAAdEBQAC1AgAh0gFAALUCACHeAQEAtAIAId8BAQC0AgAh4AEBALQCACHhAQEAywIAIeIBAQDLAgAh4wEBAMsCACHkAUAA-wIAIeUBQAD7AgAh5gEBAMsCACHnAQEAywIAIQIAAAAJACAXAAChBAAgAgAAAJ8EACAXAACgBAAgEMoBAACeBAAwywEAAJ8EABDMAQAAngQAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAId4BAQC0AgAh3wEBALQCACHgAQEAtAIAIeEBAQDLAgAh4gEBAMsCACHjAQEAywIAIeQBQAD7AgAh5QFAAPsCACHmAQEAywIAIecBAQDLAgAhEMoBAACeBAAwywEAAJ8EABDMAQAAngQAMM0BAQC0AgAh0QFAALUCACHSAUAAtQIAId4BAQC0AgAh3wEBALQCACHgAQEAtAIAIeEBAQDLAgAh4gEBAMsCACHjAQEAywIAIeQBQAD7AgAh5QFAAPsCACHmAQEAywIAIecBAQDLAgAhDM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAId4BAQCAAwAh3wEBAIADACHhAQEAhgMAIeIBAQCGAwAh4wEBAIYDACHkAUAAhwMAIeUBQACHAwAh5gEBAIYDACHnAQEAhgMAIQzNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHeAQEAgAMAId8BAQCAAwAh4QEBAIYDACHiAQEAhgMAIeMBAQCGAwAh5AFAAIcDACHlAUAAhwMAIeYBAQCGAwAh5wEBAIYDACEMzQEBAAAAAdEBQAAAAAHSAUAAAAAB3gEBAAAAAd8BAQAAAAHhAQEAAAAB4gEBAAAAAeMBAQAAAAHkAUAAAAAB5QFAAAAAAeYBAQAAAAHnAQEAAAABB80BAQAAAAHQAUAAAAAB0QFAAAAAAdIBQAAAAAHoAQEAAAAB6QEBAAAAAeoBAQAAAAECAAAABQAgHgAArgQAIAMAAAAFACAeAACuBAAgHwAArQQAIAEXAACBBQAwDAMAANoCACDKAQAA_AIAMMsBAAADABDMAQAA_AIAMM0BAQAAAAHQAUAAtQIAIdEBQAC1AgAh0gFAALUCACHgAQEAtAIAIegBAQAAAAHpAQEAywIAIeoBAQDLAgAhAgAAAAUAIBcAAK0EACACAAAAqwQAIBcAAKwEACALygEAAKoEADDLAQAAqwQAEMwBAACqBAAwzQEBALQCACHQAUAAtQIAIdEBQAC1AgAh0gFAALUCACHgAQEAtAIAIegBAQC0AgAh6QEBAMsCACHqAQEAywIAIQvKAQAAqgQAMMsBAACrBAAQzAEAAKoEADDNAQEAtAIAIdABQAC1AgAh0QFAALUCACHSAUAAtQIAIeABAQC0AgAh6AEBALQCACHpAQEAywIAIeoBAQDLAgAhB80BAQCAAwAh0AFAAIEDACHRAUAAgQMAIdIBQACBAwAh6AEBAIADACHpAQEAhgMAIeoBAQCGAwAhB80BAQCAAwAh0AFAAIEDACHRAUAAgQMAIdIBQACBAwAh6AEBAIADACHpAQEAhgMAIeoBAQCGAwAhB80BAQAAAAHQAUAAAAAB0QFAAAAAAdIBQAAAAAHoAQEAAAAB6QEBAAAAAeoBAQAAAAEEHgAAowQAMJgCAACkBAAwmgIAAKYEACCeAgAApwQAMAQeAACXBAAwmAIAAJgEADCaAgAAmgQAIJ4CAACbBAAwAx4AANcDACCYAgAA2AMAIJ4CAACfAQAgBB4AALYDADCYAgAAtwMAMJoCAAC5AwAgngIAALoDADAEHgAAqAMAMJgCAACpAwAwmgIAAKsDACCeAgAArAMAMAQeAACbAwAwmAIAAJwDADCaAgAAngMAIJ4CAACfAwAwAAAEAwAAxQQAIAcAAMYEACAPAAC4BAAg-wEAAIIDACAAAAAAAAAAAAAAAAUeAAD8BAAgHwAA_wQAIJgCAAD9BAAgmQIAAP4EACCeAgAAzQEAIAMeAAD8BAAgmAIAAP0EACCeAgAAzQEAIAgEAAC1BAAgBQAAtgQAIAsAALkEACAPAAC4BAAgEAAAtwQAIBEAALoEACDuAQAAggMAIPMBAACCAwAgAAAAAAAAAAAAAAAAAAAAAAUeAAD3BAAgHwAA-gQAIJgCAAD4BAAgmQIAAPkEACCeAgAAnwEAIAMeAAD3BAAgmAIAAPgEACCeAgAAnwEAIAAAAAseAADcBAAwHwAA4AQAMJgCAADdBAAwmQIAAN4EADCaAgAA3wQAIJsCAADtAwAwnAIAAO0DADCdAgAA7QMAMJ4CAADtAwAwnwIAAOEEADCgAgAA8AMAMBIGAADXBAAgCwAAkwQAIA4AAJQEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHfAQEAAAAB6wEBAAAAAe4BAQAAAAH7AQEAAAAB_wEIAAAAAYcCIAAAAAGIAgIAAAABiQIAAJAEACCKAgEAAAABiwIAAJEEACCMAgEAAAABjQIBAAAAAQIAAAAPACAeAADkBAAgAwAAAA8AIB4AAOQEACAfAADjBAAgARcAAPYEADACAAAADwAgFwAA4wQAIAIAAADxAwAgFwAA4gQAIA_NAQEAgAMAIdEBQACBAwAh0gFAAIEDACHfAQEAgAMAIesBAQCAAwAh7gEBAIYDACH7AQEAhgMAIf8BCADAAwAhhwIgAJIDACGIAgIApQMAIYkCAADzAwAgigIBAIYDACGLAgAA9AMAIIwCAQCGAwAhjQIBAIYDACESBgAA1gQAIAsAAPcDACAOAAD4AwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh3wEBAIADACHrAQEAgAMAIe4BAQCGAwAh-wEBAIYDACH_AQgAwAMAIYcCIACSAwAhiAICAKUDACGJAgAA8wMAIIoCAQCGAwAhiwIAAPQDACCMAgEAhgMAIY0CAQCGAwAhEgYAANcEACALAACTBAAgDgAAlAQAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAd8BAQAAAAHrAQEAAAAB7gEBAAAAAfsBAQAAAAH_AQgAAAABhwIgAAAAAYgCAgAAAAGJAgAAkAQAIIoCAQAAAAGLAgAAkQQAIIwCAQAAAAGNAgEAAAABBB4AANwEADCYAgAA3QQAMJoCAADfBAAgngIAAO0DADAAAAAAAAUeAADxBAAgHwAA9AQAIJgCAADyBAAgmQIAAPMEACCeAgAAzQEAIAMeAADxBAAgmAIAAPIEACCeAgAAzQEAIAAEAwAAxQQAIAYAALcEACAMAADtBAAggQIAAIIDACAJBgAAtwQAIAkAAPAEACALAAC5BAAgDgAA7QQAIO4BAACCAwAg-wEAAIIDACCKAgAAggMAIIwCAACCAwAgjQIAAIIDACABBwAAxgQAIA8EAACvBAAgBQAAsAQAIAsAALMEACAPAACyBAAgEAAAsQQAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAesBAQAAAAHsAQEAAAAB7QEgAAAAAe4BAQAAAAHwAQAAAPABAvIBAAAA8gEC8wEBAAAAAQIAAADNAQAgHgAA8QQAIAMAAADQAQAgHgAA8QQAIB8AAPUEACARAAAA0AEAIAQAAJUDACAFAACWAwAgCwAAmQMAIA8AAJgDACAQAACXAwAgFwAA9QQAIM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIesBAQCAAwAh7AEBAIADACHtASAAkgMAIe4BAQCGAwAh8AEAAJMD8AEi8gEAAJQD8gEi8wEBAIYDACEPBAAAlQMAIAUAAJYDACALAACZAwAgDwAAmAMAIBAAAJcDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIewBAQCAAwAh7QEgAJIDACHuAQEAhgMAIfABAACTA_ABIvIBAACUA_IBIvMBAQCGAwAhD80BAQAAAAHRAUAAAAAB0gFAAAAAAd8BAQAAAAHrAQEAAAAB7gEBAAAAAfsBAQAAAAH_AQgAAAABhwIgAAAAAYgCAgAAAAGJAgAAkAQAIIoCAQAAAAGLAgAAkQQAIIwCAQAAAAGNAgEAAAABCwMAAMQEACAPAACWBAAgzQEBAAAAAdEBQAAAAAHSAUAAAAAB4AEBAAAAAfMBAQAAAAH6AQEAAAAB-wEBAAAAAfwBAQAAAAH9ASAAAAABAgAAAJ8BACAeAAD3BAAgAwAAAAsAIB4AAPcEACAfAAD7BAAgDQAAAAsAIAMAAMMEACAPAADdAwAgFwAA-wQAIM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIeABAQCAAwAh8wEBAIADACH6AQEAgAMAIfsBAQCGAwAh_AEBAIADACH9ASAAkgMAIQsDAADDBAAgDwAA3QMAIM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIeABAQCAAwAh8wEBAIADACH6AQEAgAMAIfsBAQCGAwAh_AEBAIADACH9ASAAkgMAIQ8EAACvBAAgBQAAsAQAIAsAALMEACAPAACyBAAgEQAAtAQAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAesBAQAAAAHsAQEAAAAB7QEgAAAAAe4BAQAAAAHwAQAAAPABAvIBAAAA8gEC8wEBAAAAAQIAAADNAQAgHgAA_AQAIAMAAADQAQAgHgAA_AQAIB8AAIAFACARAAAA0AEAIAQAAJUDACAFAACWAwAgCwAAmQMAIA8AAJgDACARAACaAwAgFwAAgAUAIM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIesBAQCAAwAh7AEBAIADACHtASAAkgMAIe4BAQCGAwAh8AEAAJMD8AEi8gEAAJQD8gEi8wEBAIYDACEPBAAAlQMAIAUAAJYDACALAACZAwAgDwAAmAMAIBEAAJoDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIewBAQCAAwAh7QEgAJIDACHuAQEAhgMAIfABAACTA_ABIvIBAACUA_IBIvMBAQCGAwAhB80BAQAAAAHQAUAAAAAB0QFAAAAAAdIBQAAAAAHoAQEAAAAB6QEBAAAAAeoBAQAAAAEMzQEBAAAAAdEBQAAAAAHSAUAAAAAB3gEBAAAAAd8BAQAAAAHhAQEAAAAB4gEBAAAAAeMBAQAAAAHkAUAAAAAB5QFAAAAAAeYBAQAAAAHnAQEAAAABBc0BAQAAAAHRAUAAAAAB0gFAAAAAAesBAQAAAAGRAgEAAAABAgAAAEQAIB4AAIMFACAPBAAArwQAIAUAALAEACAPAACyBAAgEAAAsQQAIBEAALQEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHrAQEAAAAB7AEBAAAAAe0BIAAAAAHuAQEAAAAB8AEAAADwAQLyAQAAAPIBAvMBAQAAAAECAAAAzQEAIB4AAIUFACADAAAA0AEAIB4AAIUFACAfAACJBQAgEQAAANABACAEAACVAwAgBQAAlgMAIA8AAJgDACAQAACXAwAgEQAAmgMAIBcAAIkFACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIewBAQCAAwAh7QEgAJIDACHuAQEAhgMAIfABAACTA_ABIvIBAACUA_IBIvMBAQCGAwAhDwQAAJUDACAFAACWAwAgDwAAmAMAIBAAAJcDACARAACaAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh6wEBAIADACHsAQEAgAMAIe0BIACSAwAh7gEBAIYDACHwAQAAkwPwASLyAQAAlAPyASLzAQEAhgMAIQbNAQEAAAAB0QFAAAAAAdIBQAAAAAHgAQEAAAAB-AECAAAAAfkBAQAAAAEMAwAA6AMAIAYAANUDACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHfAQEAAAAB4AEBAAAAAfIBAAAAhAIC_AEBAAAAAYECAQAAAAGCAggAAAABhQIAAACFAgICAAAAIQAgHgAAiwUAIAMAAAAfACAeAACLBQAgHwAAjwUAIA4AAAAfACADAADmAwAgBgAAxAMAIBcAAI8FACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHfAQEAgAMAIeABAQCAAwAh8gEAAMEDhAIi_AEBAIADACGBAgEAhgMAIYICCADAAwAhhQIAAMIDhQIiDAMAAOYDACAGAADEAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh3wEBAIADACHgAQEAgAMAIfIBAADBA4QCIvwBAQCAAwAhgQIBAIYDACGCAggAwAMAIYUCAADCA4UCIgTNAQEAAAAB_gEBAAAAAf8BCAAAAAGAAgIAAAABAwAAAEcAIB4AAIMFACAfAACTBQAgBwAAAEcAIBcAAJMFACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIZECAQCAAwAhBc0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIesBAQCAAwAhkQIBAIADACEPzQEBAAAAAdEBQAAAAAHSAUAAAAAB6wEBAAAAAe4BAQAAAAH7AQEAAAAB_wEIAAAAAYYCAQAAAAGHAiAAAAABiAICAAAAAYkCAACQBAAgigIBAAAAAYsCAACRBAAgjAIBAAAAAY0CAQAAAAEPBAAArwQAIAUAALAEACALAACzBAAgEAAAsQQAIBEAALQEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHrAQEAAAAB7AEBAAAAAe0BIAAAAAHuAQEAAAAB8AEAAADwAQLyAQAAAPIBAvMBAQAAAAECAAAAzQEAIB4AAJUFACADAAAA0AEAIB4AAJUFACAfAACZBQAgEQAAANABACAEAACVAwAgBQAAlgMAIAsAAJkDACAQAACXAwAgEQAAmgMAIBcAAJkFACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIewBAQCAAwAh7QEgAJIDACHuAQEAhgMAIfABAACTA_ABIvIBAACUA_IBIvMBAQCGAwAhDwQAAJUDACAFAACWAwAgCwAAmQMAIBAAAJcDACARAACaAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh6wEBAIADACHsAQEAgAMAIe0BIACSAwAh7gEBAIYDACHwAQAAkwPwASLyAQAAlAPyASLzAQEAhgMAIQnNAQEAAAAB0QFAAAAAAdIBQAAAAAHgAQEAAAAB8gEAAACEAgL8AQEAAAABgQIBAAAAAYICCAAAAAGFAgAAAIUCAgsDAADEBAAgBwAAlQQAIM0BAQAAAAHRAUAAAAAB0gFAAAAAAeABAQAAAAHzAQEAAAAB-gEBAAAAAfsBAQAAAAH8AQEAAAAB_QEgAAAAAQIAAACfAQAgHgAAmwUAIBMGAADXBAAgCQAAkgQAIAsAAJMEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHfAQEAAAAB6wEBAAAAAe4BAQAAAAH7AQEAAAAB_wEIAAAAAYYCAQAAAAGHAiAAAAABiAICAAAAAYkCAACQBAAgigIBAAAAAYsCAACRBAAgjAIBAAAAAY0CAQAAAAECAAAADwAgHgAAnQUAIAMAAAANACAeAACdBQAgHwAAoQUAIBUAAAANACAGAADWBAAgCQAA9gMAIAsAAPcDACAXAAChBQAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh3wEBAIADACHrAQEAgAMAIe4BAQCGAwAh-wEBAIYDACH_AQgAwAMAIYYCAQCAAwAhhwIgAJIDACGIAgIApQMAIYkCAADzAwAgigIBAIYDACGLAgAA9AMAIIwCAQCGAwAhjQIBAIYDACETBgAA1gQAIAkAAPYDACALAAD3AwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh3wEBAIADACHrAQEAgAMAIe4BAQCGAwAh-wEBAIYDACH_AQgAwAMAIYYCAQCAAwAhhwIgAJIDACGIAgIApQMAIYkCAADzAwAgigIBAIYDACGLAgAA9AMAIIwCAQCGAwAhjQIBAIYDACEEzQEBAAAAAfcBAQAAAAH_AQgAAAABgAICAAAAAQMAAAALACAeAACbBQAgHwAApQUAIA0AAAALACADAADDBAAgBwAA3AMAIBcAAKUFACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHgAQEAgAMAIfMBAQCAAwAh-gEBAIADACH7AQEAhgMAIfwBAQCAAwAh_QEgAJIDACELAwAAwwQAIAcAANwDACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHgAQEAgAMAIfMBAQCAAwAh-gEBAIADACH7AQEAhgMAIfwBAQCAAwAh_QEgAJIDACEJzQEBAAAAAdEBQAAAAAHSAUAAAAAB3wEBAAAAAfIBAAAAhAIC_AEBAAAAAYECAQAAAAGCAggAAAABhQIAAACFAgITBgAA1wQAIAkAAJIEACAOAACUBAAgzQEBAAAAAdEBQAAAAAHSAUAAAAAB3wEBAAAAAesBAQAAAAHuAQEAAAAB-wEBAAAAAf8BCAAAAAGGAgEAAAABhwIgAAAAAYgCAgAAAAGJAgAAkAQAIIoCAQAAAAGLAgAAkQQAIIwCAQAAAAGNAgEAAAABAgAAAA8AIB4AAKcFACADAAAADQAgHgAApwUAIB8AAKsFACAVAAAADQAgBgAA1gQAIAkAAPYDACAOAAD4AwAgFwAAqwUAIM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAId8BAQCAAwAh6wEBAIADACHuAQEAhgMAIfsBAQCGAwAh_wEIAMADACGGAgEAgAMAIYcCIACSAwAhiAICAKUDACGJAgAA8wMAIIoCAQCGAwAhiwIAAPQDACCMAgEAhgMAIY0CAQCGAwAhEwYAANYEACAJAAD2AwAgDgAA-AMAIM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAId8BAQCAAwAh6wEBAIADACHuAQEAhgMAIfsBAQCGAwAh_wEIAMADACGGAgEAgAMAIYcCIACSAwAhiAICAKUDACGJAgAA8wMAIIoCAQCGAwAhiwIAAPQDACCMAgEAhgMAIY0CAQCGAwAhBs0BAQAAAAHRAUAAAAAB0gFAAAAAAfcBAQAAAAH4AQIAAAAB-QEBAAAAAQfNAQIAAAAB0QFAAAAAAdIBQAAAAAGRAgEAAAABkgIBAAAAAZMCAQAAAAGUAgEAAAABDwUAALAEACALAACzBAAgDwAAsgQAIBAAALEEACARAAC0BAAgzQEBAAAAAdEBQAAAAAHSAUAAAAAB6wEBAAAAAewBAQAAAAHtASAAAAAB7gEBAAAAAfABAAAA8AEC8gEAAADyAQLzAQEAAAABAgAAAM0BACAeAACuBQAgAwAAANABACAeAACuBQAgHwAAsgUAIBEAAADQAQAgBQAAlgMAIAsAAJkDACAPAACYAwAgEAAAlwMAIBEAAJoDACAXAACyBQAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh6wEBAIADACHsAQEAgAMAIe0BIACSAwAh7gEBAIYDACHwAQAAkwPwASLyAQAAlAPyASLzAQEAhgMAIQ8FAACWAwAgCwAAmQMAIA8AAJgDACAQAACXAwAgEQAAmgMAIM0BAQCAAwAh0QFAAIEDACHSAUAAgQMAIesBAQCAAwAh7AEBAIADACHtASAAkgMAIe4BAQCGAwAh8AEAAJMD8AEi8gEAAJQD8gEi8wEBAIYDACEPBAAArwQAIAsAALMEACAPAACyBAAgEAAAsQQAIBEAALQEACDNAQEAAAAB0QFAAAAAAdIBQAAAAAHrAQEAAAAB7AEBAAAAAe0BIAAAAAHuAQEAAAAB8AEAAADwAQLyAQAAAPIBAvMBAQAAAAECAAAAzQEAIB4AALMFACADAAAA0AEAIB4AALMFACAfAAC3BQAgEQAAANABACAEAACVAwAgCwAAmQMAIA8AAJgDACAQAACXAwAgEQAAmgMAIBcAALcFACDNAQEAgAMAIdEBQACBAwAh0gFAAIEDACHrAQEAgAMAIewBAQCAAwAh7QEgAJIDACHuAQEAhgMAIfABAACTA_ABIvIBAACUA_IBIvMBAQCGAwAhDwQAAJUDACALAACZAwAgDwAAmAMAIBAAAJcDACARAACaAwAgzQEBAIADACHRAUAAgQMAIdIBQACBAwAh6wEBAIADACHsAQEAgAMAIe0BIACSAwAh7gEBAIYDACHwAQAAkwPwASLyAQAAlAPyASLzAQEAhgMAIQEDAAIHBAYDBQoECAAPCyYJDyULEAwFESkBAQMAAgEDAAIEAwACBxAGCAAODyILBQYABQgADQkABwsWCQ4aCgIHEQYIAAgBBxIAAgMAAgoABgIKAAYNAAsEAwACBgAFCAAMDBsKAQwcAAILHQAOHgACByMADyQABQQqAAUrAAstAA8sABEuAAABAwACAQMAAgUIABQkABUlABYmABcnABgAAAAAAAUIABQkABUlABYmABcnABgAAAMIAB0mAB4nAB8AAAADCAAdJgAeJwAfAgYABQkABwIGAAUJAAcFCAAkJAAlJQAmJgAnJwAoAAAAAAAFCAAkJAAlJQAmJgAnJwAoAgMAAgYABQIDAAIGAAUFCAAtJAAuJQAvJgAwJwAxAAAAAAAFCAAtJAAuJQAvJgAwJwAxAgoABg0ACwIKAAYNAAsFCAA2JAA3JQA4JgA5JwA6AAAAAAAFCAA2JAA3JQA4JgA5JwA6AQMAAgEDAAIDCAA_JgBAJwBBAAAAAwgAPyYAQCcAQQIDAAIKAAYCAwACCgAGBQgARiQARyUASCYASScASgAAAAAABQgARiQARyUASCYASScASgAAAwgATyYAUCcAUQAAAAMIAE8mAFAnAFEBAwACAQMAAgMIAFYmAFcnAFgAAAADCABWJgBXJwBYAQMAAgEDAAIDCABdJgBeJwBfAAAAAwgAXSYAXicAXwAAAAMIAGUmAGYnAGcAAAADCABlJgBmJwBnEgIBEy8BFDABFTEBFjIBGDQBGTYQGjcRGzkBHDsQHTwSID0BIT4BIj8QKEITKUMZKkUHK0YHLEkHLUoHLksHL00HME8QMVAaMlIHM1QQNFUbNVYHNlcHN1gQOFscOVwgOl0GO14GPF8GPWAGPmEGP2MGQGUQQWYhQmgGQ2oQRGsiRWwGRm0GR24QSHEjSXIpSnMLS3QLTHULTXYLTncLT3kLUHsQUXwqUn4LU4ABEFSBAStVggELVoMBC1eEARBYhwEsWYgBMlqJAQpbigEKXIsBCl2MAQpejQEKX48BCmCRARBhkgEzYpQBCmOWARBklwE0ZZgBCmaZAQpnmgEQaJ0BNWmeATtqoAEFa6EBBWyjAQVtpAEFbqUBBW-nAQVwqQEQcaoBPHKsAQVzrgEQdK8BPXWwAQV2sQEFd7IBEHi1AT55tgFCercBCXu4AQl8uQEJfboBCX67AQl_vQEJgAG_ARCBAcABQ4IBwgEJgwHEARCEAcUBRIUBxgEJhgHHAQmHAcgBEIgBywFFiQHMAUuKAc4BAosBzwECjAHSAQKNAdMBAo4B1AECjwHWAQKQAdgBEJEB2QFMkgHbAQKTAd0BEJQB3gFNlQHfAQKWAeABApcB4QEQmAHkAU6ZAeUBUpoB5gEDmwHnAQOcAegBA50B6QEDngHqAQOfAewBA6AB7gEQoQHvAVOiAfEBA6MB8wEQpAH0AVSlAfUBA6YB9gEDpwH3ARCoAfoBVakB-wFZqgH8AQSrAf0BBKwB_gEErQH_AQSuAYACBK8BggIEsAGEAhCxAYUCWrIBhwIEswGJAhC0AYoCW7UBiwIEtgGMAgS3AY0CELgBkAJcuQGRAmC6AZMCYbsBlAJhvAGXAmG9AZgCYb4BmQJhvwGbAmHAAZ0CEMEBngJiwgGgAmHDAaICEMQBowJjxQGkAmHGAaUCYccBpgIQyAGpAmTJAaoCaA"
 };
 async function decodeBase64AsWasm(wasmBase64) {
   const { Buffer } = await import("buffer");
@@ -229,7 +230,9 @@ var defineExtension = runtime2.Extensions.defineExtension;
 var Role = {
   ADMIN: "ADMIN",
   PROVIDER: "PROVIDER",
-  CUSTOMER: "CUSTOMER"
+  CUSTOMER: "CUSTOMER",
+  DRIVER: "DRIVER",
+  SUPPORT: "SUPPORT"
 };
 var UserStatus = {
   ACTIVE: "ACTIVE",
@@ -253,27 +256,16 @@ var PrismaClient = getPrismaClientClass();
 // src/app/lib/prisma.ts
 var connectionString = `${envVars.DATABASE_URL}`;
 var adapter = new PrismaPg({ connectionString });
-var prisma = new PrismaClient({ adapter });
+var prisma2 = new PrismaClient({ adapter });
 
 // src/app/lib/auth.ts
-import nodemailer from "nodemailer";
-var transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  // Use true for port 465, false for port 587
-  auth: {
-    user: envVars.APP_USER,
-    pass: envVars.APP_PASS
-  }
-});
 var auth = betterAuth({
   baseURL: envVars.BETTER_AUTH_URL,
   secret: envVars.BETTER_AUTH_SECRET,
-  database: prismaAdapter(prisma, {
+  database: prismaAdapter(prisma2, {
     provider: "postgresql"
   }),
-  trustedOrigins: [envVars.FRONTEND_URL],
+  // trustedOrigins: [envVars.FRONTEND_URL!],
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 6,
@@ -284,12 +276,10 @@ var auth = betterAuth({
     additionalFields: {
       role: {
         type: "string",
-        required: true,
         defaultValue: Role.CUSTOMER
       },
       status: {
         type: "string",
-        required: true,
         defaultValue: UserStatus.ACTIVE
       },
       phone: {
@@ -298,86 +288,116 @@ var auth = betterAuth({
       }
     }
   },
-  emailVerification: {
-    sendOnSignUp: true,
-    autoSignInAfterVerification: false,
-    sendVerificationEmail: async ({ user, url, token }) => {
-      try {
-        const verificationURL = `${envVars.FRONTEND_URL}/verify-email?token=${token}`;
-        const info = await transporter.sendMail({
-          from: "FOODIE",
-          to: user.email,
-          subject: "Verify your email",
-          html: `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Email Verification</title>
-  <style>
-    body { margin: 0; padding: 0; background-color: #F8FAF3; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
-    .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 10px 30px rgba(6, 78, 59, 0.05); border: 1px solid #E2E8F0; }
-    .header { background-color: #064E3B; padding: 40px 20px; text-align: center; }
-    .header h1 { margin: 0; font-size: 28px; color: #ffffff; letter-spacing: -1px; }
-    .header span { color: #10B981; font-style: italic; }
-    .content { padding: 40px; color: #064E3B; line-height: 1.6; }
-    .content h2 { margin-top: 0; font-size: 24px; color: #064E3B; }
-    .button-wrapper { text-align: center; margin: 35px 0; }
-    .verify-button { background-color: #059669; color: #ffffff !important; padding: 16px 32px; text-decoration: none; font-weight: bold; border-radius: 12px; display: inline-block; box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3); }
-    .footer { background-color: #F1F5F9; padding: 25px; text-align: center; font-size: 12px; color: #64748B; }
-    .link-text { word-break: break-all; font-size: 12px; color: #059669; background: #F0FDF4; padding: 10px; border-radius: 8px; margin-top: 20px; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>FOODIE</h1>
-    </div>
-
-    <div class="content">
-      <h2>Welcome to the table, ${user.name || "Foodie"}!</h2>
-      <p>
-        We're thrilled to have you join our community of premium culinary enthusiasts. 
-        To start exploring our organic meals and artisan chefs, please verify your email address.
-      </p>
-
-      <div class="button-wrapper">
-        <a href="${verificationURL}" class="verify-button">
-          Verify My Account
-        </a>
-      </div>
-
-      <p style="font-size: 14px; color: #475569;">
-        If the button above doesn't work, copy and paste this link into your browser:
-      </p>
-
-      <div class="link-text">
-        ${verificationURL}
-      </div>
-
-      <p style="margin-top: 30px; font-size: 14px;">
-        Stay fresh,<br />
-        <strong>The FOODIE Team</strong>
-      </p>
-    </div>
-
-    <div class="footer">
-      \xA9 ${(/* @__PURE__ */ new Date()).getFullYear()} FOODIE Crafted for gourmet lovers.<br/>
-      123 Gourmet Ave, Culinary District, NY
-    </div>
-  </div>
-</body>
-</html>
-`
-        });
-      } catch (error) {
+  trustedOrigins: [envVars.BETTER_AUTH_URL || "http://localhost:5000", envVars.FRONTEND_URL],
+  advanced: {
+    // disableCSRFCheck: true,
+    useSecureCookies: false,
+    cookies: {
+      state: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+          httpOnly: true,
+          path: "/"
+        }
+      },
+      sessionToken: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+          httpOnly: true,
+          path: "/"
+        }
       }
     }
+  },
+  session: {
+    expiresIn: 60 * 60 * 60 * 24,
+    // 1 day in seconds
+    updateAge: 60 * 60 * 60 * 24,
+    // 1 day in seconds
+    cookieCache: {
+      enabled: true,
+      maxAge: 60 * 60 * 60 * 24
+      // 1 day in seconds
+    }
   }
+  //   emailVerification: {
+  //     sendOnSignUp: true,
+  //     autoSignInAfterVerification: false,
+  // //     sendVerificationEmail: async ({ user, url, token }) => {
+  // //       try {
+  // //         const verificationURL = `${envVars.FRONTEND_URL}/verify-email?token=${token}`;
+  // //         const info = await transporter.sendMail({
+  // //           from: "MealMate",
+  // //           to: user.email,
+  // //           subject: "Welcome to the table! Verify your email",
+  // //           html: `<!DOCTYPE html>
+  // // <html lang="en">
+  // // <head>
+  // //   <meta charset="UTF-8" />
+  // //   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  // //   <title>Verify Your Email - MealMate</title>
+  // //   <style>
+  // //     body { margin: 0; padding: 0; background-color: #FAF9F7; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  // //     .container { max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 32px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.03); border: 1px solid #F3F4F6; }
+  // //     .header { background-color: #ffffff; padding: 40px 20px; text-align: center; border-bottom: 1px solid #FAF9F7; }
+  // //     .logo-text { margin: 0; font-size: 32px; font-weight: bold; color: #1F2933; letter-spacing: -1px; text-transform: uppercase; }
+  // //     .logo-accent { color: #D97757; }
+  // //     .content { padding: 40px; color: #1F2933; line-height: 1.7; text-align: center; }
+  // //     .content h2 { margin-top: 0; font-size: 28px; color: #1F2933; font-weight: 700; }
+  // //     .content p { font-size: 16px; color: #4B5563; margin-bottom: 24px; }
+  // //     .button-wrapper { text-align: center; margin: 35px 0; }
+  // //     .verify-button { background-color: #D97757; color: #ffffff !important; padding: 18px 36px; text-decoration: none; font-weight: bold; border-radius: 16px; display: inline-block; box-shadow: 0 10px 20px rgba(217, 119, 87, 0.2); font-size: 16px; }
+  // //     .footer { background-color: #FAF9F7; padding: 30px; text-align: center; font-size: 13px; color: #9CA3AF; }
+  // //     .link-text { word-break: break-all; font-size: 12px; color: #D97757; background: #FAF9F7; padding: 15px; border-radius: 12px; margin-top: 25px; border: 1px dashed #D97757/20; }
+  // //     .signature { margin-top: 40px; font-size: 14px; color: #1F2933; }
+  // //   </style>
+  // // </head>
+  // // <body>
+  // //   <div class="container">
+  // //     <div class="header">
+  // //       <h1 class="logo-text">Meal<span class="logo-accent">Mate</span></h1>
+  // //     </div>
+  // //     <div class="content">
+  // //       <h2>Welcome to the table, ${user.name || 'Gourmet'}!</h2>
+  // //       <p>
+  // //         We're thrilled to have you join our community. Your journey toward chef-crafted, premium meals starts here. To get access to your personalized kitchen, please verify your email address below.
+  // //       </p>
+  // //       <div class="button-wrapper">
+  // //         <a href="${verificationURL}" class="verify-button">
+  // //           Verify My Account
+  // //         </a>
+  // //       </div>
+  // //       <p style="font-size: 14px; color: #9CA3AF; margin-top: 40px;">
+  // //         If the button doesn't work, copy and paste this link:
+  // //       </p>
+  // //       <div class="link-text">
+  // //         ${verificationURL}
+  // //       </div>
+  // //       <p class="signature">
+  // //         Stay hungry,<br />
+  // //         <strong>The MealMate Team</strong>
+  // //       </p>
+  // //     </div>
+  // //     <div class="footer">
+  // //       © ${new Date().getFullYear()} MealMate. Crafted for gourmet lovers.<br/>
+  // //       Dhaka, Bangladesh
+  // //     </div>
+  // //   </div>
+  // // </body>
+  // // </html>
+  // // `
+  // //         });
+  // //       } catch (error) {
+  // //         console.error("Email verification error:", error);
+  // //       }
+  // //     },
+  //   },
 });
 
 // src/app/routes/index.ts
-import express2 from "express";
+import express4 from "express";
 
 // src/app/modules/category/category.route.ts
 import { Router } from "express";
@@ -401,7 +421,7 @@ import status4 from "http-status";
 import slugify from "slugify";
 var createCategoryIntoDB = async (payload) => {
   const { name } = payload;
-  const data = await prisma.category.create({
+  const data = await prisma2.category.create({
     data: {
       name,
       slug: slugify(name, {
@@ -419,20 +439,11 @@ var createCategoryIntoDB = async (payload) => {
   return data;
 };
 var getAllCategoriesFromDB = async () => {
-  const result = await prisma.category.findMany({
-    include: {
-      _count: {
-        select: { meals: true }
-      }
-    },
-    orderBy: {
-      createdAt: "desc"
-    }
-  });
+  const result = await prisma2.category.findMany();
   return result;
 };
 var getCategoryById = async (id) => {
-  const result = await prisma.category.findUnique({
+  const result = await prisma2.category.findUnique({
     where: {
       id
     }
@@ -444,13 +455,13 @@ var getCategoryById = async (id) => {
 };
 var updateCategoryIntoDB = async (id, payload) => {
   const { name } = payload;
-  const category = await prisma.category.findUnique({
+  const category = await prisma2.category.findUnique({
     where: { id }
   });
   if (!category) {
     throw new AppError_default(status4.NOT_FOUND, "Category not found");
   }
-  const data = await prisma.category.update({
+  const data = await prisma2.category.update({
     where: { id },
     data: {
       name,
@@ -466,7 +477,7 @@ var updateCategoryIntoDB = async (id, payload) => {
   return data;
 };
 var deleteCategoryFromDB = async (id) => {
-  const categoryIsExists = await prisma.category.findUnique({
+  const categoryIsExists = await prisma2.category.findUnique({
     where: { id },
     include: {
       _count: {
@@ -483,7 +494,7 @@ var deleteCategoryFromDB = async (id) => {
       "Cannot delete category with meals"
     );
   }
-  await prisma.category.delete({
+  await prisma2.category.delete({
     where: { id }
   });
   return { message: "Meal category deleted successfully" };
@@ -739,7 +750,7 @@ var buildMealQueryCondition = (payload) => {
 // src/app/modules/meal/meal.service.ts
 var createMealIntoDB = async (payload) => {
   const { name, calories, ingredients, description, price, image, isAvailable, categoryId, dietary, cuisine, mealType, spiceLevel, userId } = payload;
-  const meal = await prisma.$transaction(async (tx) => {
+  const meal = await prisma2.$transaction(async (tx) => {
     const provider = await tx.providerProfile.findUnique({
       where: {
         userId
@@ -770,13 +781,13 @@ var createMealIntoDB = async (payload) => {
   return meal;
 };
 var getAllMealsFromDB = async (payload) => {
-  const meal = await prisma.meal.findMany({
+  const meal = await prisma2.meal.findMany({
     take: Number(payload.limit),
     skip: Number(payload.skip),
     where: buildMealQueryCondition(payload),
     ...payload.sortBy && { orderBy: { [payload.sortBy]: payload.sortOrder } }
   });
-  const total = await prisma.meal.count({
+  const total = await prisma2.meal.count({
     where: buildMealQueryCondition(payload)
   });
   if (!meal || meal.length === 0) {
@@ -794,7 +805,7 @@ var getAllMealsFromDB = async (payload) => {
   };
 };
 var getSingleMealFromDB = async (mealId) => {
-  const result = await prisma.meal.findUnique({
+  const result = await prisma2.meal.findUnique({
     where: {
       id: mealId
     },
@@ -816,7 +827,7 @@ var getSingleMealFromDB = async (mealId) => {
   return result;
 };
 var getProviderMealsFromDB = async (userId) => {
-  const provider = await prisma.providerProfile.findUnique({
+  const provider = await prisma2.providerProfile.findUnique({
     where: {
       userId
     }
@@ -824,7 +835,7 @@ var getProviderMealsFromDB = async (userId) => {
   if (!provider) {
     throw new AppError_default(status7.NOT_FOUND, "Provider not found");
   }
-  const result = await prisma.meal.findMany({
+  const result = await prisma2.meal.findMany({
     where: {
       providerId: provider.id
     },
@@ -845,7 +856,7 @@ var getProviderMealsFromDB = async (userId) => {
   };
 };
 var updateMealIntoDB = async (mealId, userId, payload) => {
-  const provider = await prisma.providerProfile.findUnique({
+  const provider = await prisma2.providerProfile.findUnique({
     where: {
       userId
     }
@@ -853,7 +864,7 @@ var updateMealIntoDB = async (mealId, userId, payload) => {
   if (!provider) {
     throw new AppError_default(status7.NOT_FOUND, "Provider not found");
   }
-  const isExistMeal = await prisma.meal.findUnique({
+  const isExistMeal = await prisma2.meal.findUnique({
     where: {
       id: mealId,
       providerId: provider.id
@@ -865,7 +876,7 @@ var updateMealIntoDB = async (mealId, userId, payload) => {
   if (isExistMeal.providerId !== provider.id) {
     throw new AppError_default(status7.FORBIDDEN, "You are not authorized to update this meal");
   }
-  const result = await prisma.meal.update({
+  const result = await prisma2.meal.update({
     where: {
       id: mealId
     },
@@ -877,7 +888,7 @@ var updateMealIntoDB = async (mealId, userId, payload) => {
   return result;
 };
 var deleteMealFromDB = async (mealId, userId) => {
-  const provider = await prisma.providerProfile.findUnique({
+  const provider = await prisma2.providerProfile.findUnique({
     where: {
       userId
     }
@@ -885,7 +896,7 @@ var deleteMealFromDB = async (mealId, userId) => {
   if (!provider) {
     throw new AppError_default(status7.NOT_FOUND, "Provider not found");
   }
-  const isExistMeal = await prisma.meal.findUnique({
+  const isExistMeal = await prisma2.meal.findUnique({
     where: {
       id: mealId,
       providerId: provider.id
@@ -897,7 +908,7 @@ var deleteMealFromDB = async (mealId, userId) => {
   if (isExistMeal.providerId !== provider.id) {
     throw new AppError_default(status7.FORBIDDEN, "You are not authorized to delete this meal");
   }
-  const runningOrder = await prisma.order.findFirst({
+  const runningOrder = await prisma2.order.findFirst({
     where: {
       status: {
         in: [OrderStatus.PENDING, OrderStatus.ACCEPTED, OrderStatus.COOKING, OrderStatus.ON_THE_WAY]
@@ -912,7 +923,7 @@ var deleteMealFromDB = async (mealId, userId) => {
   if (runningOrder) {
     throw new AppError_default(status7.BAD_REQUEST, "Meal is already ordered");
   }
-  const result = await prisma.meal.delete({
+  const result = await prisma2.meal.delete({
     where: {
       id: mealId
     }
@@ -920,13 +931,13 @@ var deleteMealFromDB = async (mealId, userId) => {
   return result;
 };
 var getProviderOrdersFromDB = async (userId) => {
-  const provider = await prisma.providerProfile.findUnique({
+  const provider = await prisma2.providerProfile.findUnique({
     where: { userId }
   });
   if (!provider) {
     throw new AppError_default(status7.NOT_FOUND, "Provider profile not found");
   }
-  const orders = await prisma.order.findMany({
+  const orders = await prisma2.order.findMany({
     where: { providerId: provider.id },
     include: {
       user: {
@@ -961,7 +972,7 @@ var getProviderOrdersFromDB = async (userId) => {
   };
 };
 var getPopularMealsFromDB = async () => {
-  const meals = await prisma.meal.findMany({
+  const meals = await prisma2.meal.findMany({
     orderBy: {
       reviews: {
         _count: "desc"
@@ -988,7 +999,7 @@ var getPopularMealsFromDB = async () => {
   };
 };
 var dietaryOptionsFromDB = async () => {
-  const result = await prisma.meal.findMany({
+  const result = await prisma2.meal.findMany({
     distinct: ["dietary"],
     select: {
       dietary: true
@@ -1003,7 +1014,7 @@ var dietaryOptionsFromDB = async () => {
   return Array.from(dietarySet);
 };
 var getCusineOptionsFromDB = async () => {
-  const result = await prisma.meal.findMany({
+  const result = await prisma2.meal.findMany({
     distinct: ["cuisine"],
     select: {
       cuisine: true
@@ -1012,13 +1023,13 @@ var getCusineOptionsFromDB = async () => {
   return result.map((meal) => meal.cuisine).filter((cusine) => cusine !== null);
 };
 var updateOrderStatusIntoDB = async (userId, orderId, orderStatus) => {
-  const provider = await prisma.providerProfile.findUnique({
+  const provider = await prisma2.providerProfile.findUnique({
     where: { userId }
   });
   if (!provider) {
     throw new AppError_default(status7.NOT_FOUND, "Provider profile not found");
   }
-  const isExistOrder = await prisma.meal.findUnique({
+  const isExistOrder = await prisma2.meal.findUnique({
     where: {
       id: orderId,
       providerId: provider.id
@@ -1030,7 +1041,7 @@ var updateOrderStatusIntoDB = async (userId, orderId, orderStatus) => {
   if (isExistOrder.providerId !== provider.id) {
     throw new AppError_default(status7.FORBIDDEN, "You are not authorized to delete this meal");
   }
-  const result = await prisma.order.update({
+  const result = await prisma2.order.update({
     where: {
       id: orderId
     },
@@ -1042,7 +1053,7 @@ var updateOrderStatusIntoDB = async (userId, orderId, orderStatus) => {
   return result;
 };
 var getMealTypesFromDB = async () => {
-  const mealTypes = await prisma.meal.findMany({
+  const mealTypes = await prisma2.meal.findMany({
     distinct: ["mealType"],
     select: {
       mealType: true
@@ -1352,7 +1363,7 @@ import status10 from "http-status";
 // src/app/modules/order/order.service.ts
 import status9 from "http-status";
 var createOrderIntoDB = async (payload, userId) => {
-  const provider = await prisma.providerProfile.findUnique({
+  const provider = await prisma2.providerProfile.findUnique({
     where: {
       id: payload.providerId
     },
@@ -1371,7 +1382,7 @@ var createOrderIntoDB = async (payload, userId) => {
     throw new AppError_default(status9.BAD_REQUEST, "Provider is not active");
   }
   const mealsId = payload.items.map((item) => item.mealId);
-  const meals = await prisma.meal.findMany({
+  const meals = await prisma2.meal.findMany({
     where: {
       id: {
         in: mealsId
@@ -1398,7 +1409,7 @@ var createOrderIntoDB = async (payload, userId) => {
     };
   });
   const orderNumber = `ORD-${Date.now()}`;
-  const result = await prisma.order.create({
+  const result = await prisma2.order.create({
     data: {
       orderNumber,
       userId,
@@ -1421,7 +1432,7 @@ var createOrderIntoDB = async (payload, userId) => {
   return result;
 };
 var getMyOrdersFromDB = (customerId) => {
-  const orders = prisma.order.findMany({
+  const orders = prisma2.order.findMany({
     where: {
       userId: customerId
     },
@@ -1439,7 +1450,7 @@ var getMyOrdersFromDB = (customerId) => {
   return orders;
 };
 var getOrderByIdFromDB = (orderId, customerId) => {
-  const order = prisma.order.findFirst({
+  const order = prisma2.order.findFirst({
     where: {
       id: orderId,
       userId: customerId
@@ -1463,7 +1474,7 @@ var getOrderByIdFromDB = (orderId, customerId) => {
   return order;
 };
 var updateOrderStatusIntoDB2 = (orderId, orderStatus, providerId) => {
-  const order = prisma.order.findFirst({
+  const order = prisma2.order.findFirst({
     where: {
       id: orderId,
       providerId
@@ -1472,7 +1483,7 @@ var updateOrderStatusIntoDB2 = (orderId, orderStatus, providerId) => {
   if (!order) {
     throw new AppError_default(status9.NOT_FOUND, "Order not found");
   }
-  const updatedOrder = prisma.order.update({
+  const updatedOrder = prisma2.order.update({
     where: {
       id: orderId
     },
@@ -1493,7 +1504,7 @@ var updateOrderStatusIntoDB2 = (orderId, orderStatus, providerId) => {
   return updatedOrder;
 };
 var trackOrderStatusIntoDB = (orderId, userId) => {
-  const order = prisma.order.findFirst({
+  const order = prisma2.order.findFirst({
     where: {
       id: orderId,
       userId
@@ -1519,7 +1530,7 @@ var trackOrderStatusIntoDB = (orderId, userId) => {
   return order;
 };
 var cancelOrderIntoDB = (orderId, customerId) => {
-  const order = prisma.order.findFirst({
+  const order = prisma2.order.findFirst({
     where: {
       id: orderId,
       userId: customerId
@@ -1531,7 +1542,7 @@ var cancelOrderIntoDB = (orderId, customerId) => {
   if (order?.status === OrderStatus.CANCELLED) {
     throw new AppError_default(status9.BAD_REQUEST, "Order is already cancelled");
   }
-  const updatedOrder = prisma.order.update({
+  const updatedOrder = prisma2.order.update({
     where: {
       id: orderId
     },
@@ -1552,7 +1563,7 @@ var cancelOrderIntoDB = (orderId, customerId) => {
   return updatedOrder;
 };
 var getAllOrdersFromDB = async () => {
-  const orders = prisma.order.findMany({
+  const orders = prisma2.order.findMany({
     include: {
       items: {
         include: {
@@ -1716,7 +1727,7 @@ import { Router as Router4 } from "express";
 import status11 from "http-status";
 var createProviderProfileIntoDB = async (payload) => {
   const { userId, shopName, description, address, phone, isOpen } = payload;
-  const result = await prisma.$transaction(async (tx) => {
+  const result = await prisma2.$transaction(async (tx) => {
     const isExistProvider = await tx.providerProfile.findUnique({
       where: {
         userId
@@ -1758,7 +1769,7 @@ var createProviderProfileIntoDB = async (payload) => {
   return result;
 };
 var getAllProvidersFromDB = async () => {
-  const result = await prisma.providerProfile.findMany({
+  const result = await prisma2.providerProfile.findMany({
     include: {
       user: true,
       meals: true
@@ -1773,7 +1784,7 @@ var getAllProvidersFromDB = async () => {
   return result;
 };
 var getProviderWithIdFromDB = async (id) => {
-  const provider = await prisma.providerProfile.findUnique({
+  const provider = await prisma2.providerProfile.findUnique({
     where: {
       userId: id
     },
@@ -1889,7 +1900,7 @@ var getCurrentUserFromDB = async (req) => {
   return req.user;
 };
 var getAllUsersFromDB = async () => {
-  const result = await prisma.user.findMany({
+  const result = await prisma2.user.findMany({
     orderBy: {
       createdAt: "desc"
     }
@@ -1897,7 +1908,7 @@ var getAllUsersFromDB = async () => {
   return result;
 };
 var updateUserStatusIntoDB = async (id, newStatus) => {
-  const isExistUser = await prisma.user.findUnique({
+  const isExistUser = await prisma2.user.findUnique({
     where: {
       id
     }
@@ -1911,7 +1922,7 @@ var updateUserStatusIntoDB = async (id, newStatus) => {
   if (isExistUser.status === UserStatus.DELETED) {
     throw new AppError_default(status13.BAD_REQUEST, "User is deleted");
   }
-  const result = await prisma.user.update({
+  const result = await prisma2.user.update({
     where: {
       id
     },
@@ -1926,7 +1937,7 @@ var updateProfileIntoDB = async (req, id, payload) => {
   if (!userId) {
     throw new AppError_default(status13.UNAUTHORIZED, "Unauthorized");
   }
-  const isExistUser = await prisma.user.findUnique({
+  const isExistUser = await prisma2.user.findUnique({
     where: {
       id
     }
@@ -1934,7 +1945,7 @@ var updateProfileIntoDB = async (req, id, payload) => {
   if (!isExistUser) {
     throw new AppError_default(status13.NOT_FOUND, "User not found");
   }
-  const result = await prisma.user.update({
+  const result = await prisma2.user.update({
     where: {
       id
     },
@@ -2045,7 +2056,7 @@ var createReviewIntoDB = async (payload) => {
   if (rating < 1 || rating > 5) {
     throw new AppError_default(status15.BAD_REQUEST, "Rating must be between 1 and 5");
   }
-  const meal = await prisma.meal.findUnique({
+  const meal = await prisma2.meal.findUnique({
     where: {
       id: mealId
     }
@@ -2053,7 +2064,7 @@ var createReviewIntoDB = async (payload) => {
   if (!meal) {
     throw new AppError_default(status15.NOT_FOUND, "Meal not found");
   }
-  const existingReview = await prisma.review.findFirst({
+  const existingReview = await prisma2.review.findFirst({
     where: {
       userId,
       mealId
@@ -2062,7 +2073,7 @@ var createReviewIntoDB = async (payload) => {
   if (existingReview) {
     throw new AppError_default(status15.BAD_REQUEST, "You have already reviewed this meal");
   }
-  const hasOrder = await prisma.order.findFirst({
+  const hasOrder = await prisma2.order.findFirst({
     where: {
       userId,
       status: OrderStatus.DELIVERED,
@@ -2076,7 +2087,7 @@ var createReviewIntoDB = async (payload) => {
   if (!hasOrder) {
     throw new AppError_default(status15.BAD_REQUEST, "You have not ordered this meal");
   }
-  const review = await prisma.review.create({
+  const review = await prisma2.review.create({
     data: {
       userId,
       mealId,
@@ -2091,7 +2102,7 @@ var createReviewIntoDB = async (payload) => {
   return review;
 };
 var getMealReviewsFromDB = async (mealId) => {
-  const result = await prisma.review.findMany({
+  const result = await prisma2.review.findMany({
     where: {
       mealId
     },
@@ -2106,7 +2117,7 @@ var getMealReviewsFromDB = async (mealId) => {
   return { averageRating, result, totalReviews: result.length };
 };
 var getUserReviewsFromDB = async (userId) => {
-  const result = await prisma.review.findMany({
+  const result = await prisma2.review.findMany({
     where: {
       userId
     },
@@ -2120,7 +2131,7 @@ var getUserReviewsFromDB = async (userId) => {
   return result;
 };
 var getProviderReviewsFromDB = async (providerId) => {
-  const providerMeals = await prisma.meal.findMany({
+  const providerMeals = await prisma2.meal.findMany({
     where: {
       providerId
     },
@@ -2129,7 +2140,7 @@ var getProviderReviewsFromDB = async (providerId) => {
     }
   });
   const mealIds = providerMeals.map((meal) => meal.id);
-  const reviews = await prisma.review.findMany({
+  const reviews = await prisma2.review.findMany({
     where: {
       mealId: {
         in: mealIds
@@ -2155,7 +2166,7 @@ var getProviderReviewsFromDB = async (providerId) => {
   return { reviews, totalReviews, averageRating, ratingDistribution };
 };
 var updateReviewIntoDB = async (reviewId, userId, payload) => {
-  const isExistReview = await prisma.review.findUnique({
+  const isExistReview = await prisma2.review.findUnique({
     where: {
       id: reviewId
     }
@@ -2169,7 +2180,7 @@ var updateReviewIntoDB = async (reviewId, userId, payload) => {
   if (payload.rating && (payload.rating < 1 || payload.rating > 5)) {
     throw new AppError_default(status15.BAD_REQUEST, "Rating must be between 1 and 5");
   }
-  const result = await prisma.review.update({
+  const result = await prisma2.review.update({
     where: {
       id: reviewId
     },
@@ -2182,7 +2193,7 @@ var updateReviewIntoDB = async (reviewId, userId, payload) => {
   return result;
 };
 var deleteReviewFromDB = async (reviewId, userId) => {
-  const isExistReview = await prisma.review.findUnique({
+  const isExistReview = await prisma2.review.findUnique({
     where: {
       id: reviewId
     }
@@ -2193,7 +2204,7 @@ var deleteReviewFromDB = async (reviewId, userId) => {
   if (isExistReview.userId !== userId) {
     throw new AppError_default(status15.FORBIDDEN, "You are not authorized to delete this review");
   }
-  await prisma.review.delete({
+  await prisma2.review.delete({
     where: {
       id: reviewId
     }
@@ -2274,7 +2285,7 @@ var getProviderReviews = async () => catchAsync(
         data: null
       });
     }
-    const provider = await prisma.providerProfile.findUnique({
+    const provider = await prisma2.providerProfile.findUnique({
       where: {
         userId
       }
@@ -2381,8 +2392,942 @@ router6.delete(
 );
 var ReviewRoutes = router6;
 
-// src/app/routes/index.ts
+// src/app/modules/ai/ai.route.ts
+import express2 from "express";
+
+// node_modules/http-status-codes/build/es/legacy.js
+var ACCEPTED = 202;
+var BAD_GATEWAY = 502;
+var BAD_REQUEST = 400;
+var CONFLICT = 409;
+var CONTINUE = 100;
+var CREATED = 201;
+var EXPECTATION_FAILED = 417;
+var FORBIDDEN = 403;
+var GATEWAY_TIMEOUT = 504;
+var GONE = 410;
+var HTTP_VERSION_NOT_SUPPORTED = 505;
+var IM_A_TEAPOT = 418;
+var INSUFFICIENT_SPACE_ON_RESOURCE = 419;
+var INSUFFICIENT_STORAGE = 507;
+var INTERNAL_SERVER_ERROR = 500;
+var LENGTH_REQUIRED = 411;
+var LOCKED = 423;
+var METHOD_FAILURE = 420;
+var METHOD_NOT_ALLOWED = 405;
+var MOVED_PERMANENTLY = 301;
+var MOVED_TEMPORARILY = 302;
+var MULTI_STATUS = 207;
+var MULTIPLE_CHOICES = 300;
+var NETWORK_AUTHENTICATION_REQUIRED = 511;
+var NO_CONTENT = 204;
+var NON_AUTHORITATIVE_INFORMATION = 203;
+var NOT_ACCEPTABLE = 406;
+var NOT_FOUND = 404;
+var NOT_IMPLEMENTED = 501;
+var NOT_MODIFIED = 304;
+var OK = 200;
+var PARTIAL_CONTENT = 206;
+var PAYMENT_REQUIRED = 402;
+var PERMANENT_REDIRECT = 308;
+var PRECONDITION_FAILED = 412;
+var PRECONDITION_REQUIRED = 428;
+var PROCESSING = 102;
+var PROXY_AUTHENTICATION_REQUIRED = 407;
+var REQUEST_HEADER_FIELDS_TOO_LARGE = 431;
+var REQUEST_TIMEOUT = 408;
+var REQUEST_TOO_LONG = 413;
+var REQUEST_URI_TOO_LONG = 414;
+var REQUESTED_RANGE_NOT_SATISFIABLE = 416;
+var RESET_CONTENT = 205;
+var SEE_OTHER = 303;
+var SERVICE_UNAVAILABLE = 503;
+var SWITCHING_PROTOCOLS = 101;
+var TEMPORARY_REDIRECT = 307;
+var TOO_MANY_REQUESTS = 429;
+var UNAUTHORIZED = 401;
+var UNPROCESSABLE_ENTITY = 422;
+var UNSUPPORTED_MEDIA_TYPE = 415;
+var USE_PROXY = 305;
+var legacy_default = {
+  ACCEPTED,
+  BAD_GATEWAY,
+  BAD_REQUEST,
+  CONFLICT,
+  CONTINUE,
+  CREATED,
+  EXPECTATION_FAILED,
+  FORBIDDEN,
+  GATEWAY_TIMEOUT,
+  GONE,
+  HTTP_VERSION_NOT_SUPPORTED,
+  IM_A_TEAPOT,
+  INSUFFICIENT_SPACE_ON_RESOURCE,
+  INSUFFICIENT_STORAGE,
+  INTERNAL_SERVER_ERROR,
+  LENGTH_REQUIRED,
+  LOCKED,
+  METHOD_FAILURE,
+  METHOD_NOT_ALLOWED,
+  MOVED_PERMANENTLY,
+  MOVED_TEMPORARILY,
+  MULTI_STATUS,
+  MULTIPLE_CHOICES,
+  NETWORK_AUTHENTICATION_REQUIRED,
+  NO_CONTENT,
+  NON_AUTHORITATIVE_INFORMATION,
+  NOT_ACCEPTABLE,
+  NOT_FOUND,
+  NOT_IMPLEMENTED,
+  NOT_MODIFIED,
+  OK,
+  PARTIAL_CONTENT,
+  PAYMENT_REQUIRED,
+  PERMANENT_REDIRECT,
+  PRECONDITION_FAILED,
+  PRECONDITION_REQUIRED,
+  PROCESSING,
+  PROXY_AUTHENTICATION_REQUIRED,
+  REQUEST_HEADER_FIELDS_TOO_LARGE,
+  REQUEST_TIMEOUT,
+  REQUEST_TOO_LONG,
+  REQUEST_URI_TOO_LONG,
+  REQUESTED_RANGE_NOT_SATISFIABLE,
+  RESET_CONTENT,
+  SEE_OTHER,
+  SERVICE_UNAVAILABLE,
+  SWITCHING_PROTOCOLS,
+  TEMPORARY_REDIRECT,
+  TOO_MANY_REQUESTS,
+  UNAUTHORIZED,
+  UNPROCESSABLE_ENTITY,
+  UNSUPPORTED_MEDIA_TYPE,
+  USE_PROXY
+};
+
+// node_modules/http-status-codes/build/es/utils.js
+var statusCodeToReasonPhrase = {
+  "202": "Accepted",
+  "502": "Bad Gateway",
+  "400": "Bad Request",
+  "409": "Conflict",
+  "100": "Continue",
+  "201": "Created",
+  "417": "Expectation Failed",
+  "424": "Failed Dependency",
+  "403": "Forbidden",
+  "504": "Gateway Timeout",
+  "410": "Gone",
+  "505": "HTTP Version Not Supported",
+  "418": "I'm a teapot",
+  "419": "Insufficient Space on Resource",
+  "507": "Insufficient Storage",
+  "500": "Internal Server Error",
+  "411": "Length Required",
+  "423": "Locked",
+  "420": "Method Failure",
+  "405": "Method Not Allowed",
+  "301": "Moved Permanently",
+  "302": "Moved Temporarily",
+  "207": "Multi-Status",
+  "300": "Multiple Choices",
+  "511": "Network Authentication Required",
+  "204": "No Content",
+  "203": "Non Authoritative Information",
+  "406": "Not Acceptable",
+  "404": "Not Found",
+  "501": "Not Implemented",
+  "304": "Not Modified",
+  "200": "OK",
+  "206": "Partial Content",
+  "402": "Payment Required",
+  "308": "Permanent Redirect",
+  "412": "Precondition Failed",
+  "428": "Precondition Required",
+  "102": "Processing",
+  "103": "Early Hints",
+  "426": "Upgrade Required",
+  "407": "Proxy Authentication Required",
+  "431": "Request Header Fields Too Large",
+  "408": "Request Timeout",
+  "413": "Request Entity Too Large",
+  "414": "Request-URI Too Long",
+  "416": "Requested Range Not Satisfiable",
+  "205": "Reset Content",
+  "303": "See Other",
+  "503": "Service Unavailable",
+  "101": "Switching Protocols",
+  "307": "Temporary Redirect",
+  "429": "Too Many Requests",
+  "401": "Unauthorized",
+  "451": "Unavailable For Legal Reasons",
+  "422": "Unprocessable Entity",
+  "415": "Unsupported Media Type",
+  "305": "Use Proxy",
+  "421": "Misdirected Request"
+};
+var reasonPhraseToStatusCode = {
+  "Accepted": 202,
+  "Bad Gateway": 502,
+  "Bad Request": 400,
+  "Conflict": 409,
+  "Continue": 100,
+  "Created": 201,
+  "Expectation Failed": 417,
+  "Failed Dependency": 424,
+  "Forbidden": 403,
+  "Gateway Timeout": 504,
+  "Gone": 410,
+  "HTTP Version Not Supported": 505,
+  "I'm a teapot": 418,
+  "Insufficient Space on Resource": 419,
+  "Insufficient Storage": 507,
+  "Internal Server Error": 500,
+  "Length Required": 411,
+  "Locked": 423,
+  "Method Failure": 420,
+  "Method Not Allowed": 405,
+  "Moved Permanently": 301,
+  "Moved Temporarily": 302,
+  "Multi-Status": 207,
+  "Multiple Choices": 300,
+  "Network Authentication Required": 511,
+  "No Content": 204,
+  "Non Authoritative Information": 203,
+  "Not Acceptable": 406,
+  "Not Found": 404,
+  "Not Implemented": 501,
+  "Not Modified": 304,
+  "OK": 200,
+  "Partial Content": 206,
+  "Payment Required": 402,
+  "Permanent Redirect": 308,
+  "Precondition Failed": 412,
+  "Precondition Required": 428,
+  "Processing": 102,
+  "Early Hints": 103,
+  "Upgrade Required": 426,
+  "Proxy Authentication Required": 407,
+  "Request Header Fields Too Large": 431,
+  "Request Timeout": 408,
+  "Request Entity Too Large": 413,
+  "Request-URI Too Long": 414,
+  "Requested Range Not Satisfiable": 416,
+  "Reset Content": 205,
+  "See Other": 303,
+  "Service Unavailable": 503,
+  "Switching Protocols": 101,
+  "Temporary Redirect": 307,
+  "Too Many Requests": 429,
+  "Unauthorized": 401,
+  "Unavailable For Legal Reasons": 451,
+  "Unprocessable Entity": 422,
+  "Unsupported Media Type": 415,
+  "Use Proxy": 305,
+  "Misdirected Request": 421
+};
+
+// node_modules/http-status-codes/build/es/utils-functions.js
+function getReasonPhrase(statusCode) {
+  var result = statusCodeToReasonPhrase[statusCode.toString()];
+  if (!result) {
+    throw new Error("Status code does not exist: " + statusCode);
+  }
+  return result;
+}
+function getStatusCode(reasonPhrase) {
+  var result = reasonPhraseToStatusCode[reasonPhrase];
+  if (!result) {
+    throw new Error("Reason phrase does not exist: " + reasonPhrase);
+  }
+  return result;
+}
+var getStatusText = getReasonPhrase;
+
+// node_modules/http-status-codes/build/es/status-codes.js
+var StatusCodes;
+(function(StatusCodes2) {
+  StatusCodes2[StatusCodes2["CONTINUE"] = 100] = "CONTINUE";
+  StatusCodes2[StatusCodes2["SWITCHING_PROTOCOLS"] = 101] = "SWITCHING_PROTOCOLS";
+  StatusCodes2[StatusCodes2["PROCESSING"] = 102] = "PROCESSING";
+  StatusCodes2[StatusCodes2["EARLY_HINTS"] = 103] = "EARLY_HINTS";
+  StatusCodes2[StatusCodes2["OK"] = 200] = "OK";
+  StatusCodes2[StatusCodes2["CREATED"] = 201] = "CREATED";
+  StatusCodes2[StatusCodes2["ACCEPTED"] = 202] = "ACCEPTED";
+  StatusCodes2[StatusCodes2["NON_AUTHORITATIVE_INFORMATION"] = 203] = "NON_AUTHORITATIVE_INFORMATION";
+  StatusCodes2[StatusCodes2["NO_CONTENT"] = 204] = "NO_CONTENT";
+  StatusCodes2[StatusCodes2["RESET_CONTENT"] = 205] = "RESET_CONTENT";
+  StatusCodes2[StatusCodes2["PARTIAL_CONTENT"] = 206] = "PARTIAL_CONTENT";
+  StatusCodes2[StatusCodes2["MULTI_STATUS"] = 207] = "MULTI_STATUS";
+  StatusCodes2[StatusCodes2["MULTIPLE_CHOICES"] = 300] = "MULTIPLE_CHOICES";
+  StatusCodes2[StatusCodes2["MOVED_PERMANENTLY"] = 301] = "MOVED_PERMANENTLY";
+  StatusCodes2[StatusCodes2["MOVED_TEMPORARILY"] = 302] = "MOVED_TEMPORARILY";
+  StatusCodes2[StatusCodes2["SEE_OTHER"] = 303] = "SEE_OTHER";
+  StatusCodes2[StatusCodes2["NOT_MODIFIED"] = 304] = "NOT_MODIFIED";
+  StatusCodes2[StatusCodes2["USE_PROXY"] = 305] = "USE_PROXY";
+  StatusCodes2[StatusCodes2["TEMPORARY_REDIRECT"] = 307] = "TEMPORARY_REDIRECT";
+  StatusCodes2[StatusCodes2["PERMANENT_REDIRECT"] = 308] = "PERMANENT_REDIRECT";
+  StatusCodes2[StatusCodes2["BAD_REQUEST"] = 400] = "BAD_REQUEST";
+  StatusCodes2[StatusCodes2["UNAUTHORIZED"] = 401] = "UNAUTHORIZED";
+  StatusCodes2[StatusCodes2["PAYMENT_REQUIRED"] = 402] = "PAYMENT_REQUIRED";
+  StatusCodes2[StatusCodes2["FORBIDDEN"] = 403] = "FORBIDDEN";
+  StatusCodes2[StatusCodes2["NOT_FOUND"] = 404] = "NOT_FOUND";
+  StatusCodes2[StatusCodes2["METHOD_NOT_ALLOWED"] = 405] = "METHOD_NOT_ALLOWED";
+  StatusCodes2[StatusCodes2["NOT_ACCEPTABLE"] = 406] = "NOT_ACCEPTABLE";
+  StatusCodes2[StatusCodes2["PROXY_AUTHENTICATION_REQUIRED"] = 407] = "PROXY_AUTHENTICATION_REQUIRED";
+  StatusCodes2[StatusCodes2["REQUEST_TIMEOUT"] = 408] = "REQUEST_TIMEOUT";
+  StatusCodes2[StatusCodes2["CONFLICT"] = 409] = "CONFLICT";
+  StatusCodes2[StatusCodes2["GONE"] = 410] = "GONE";
+  StatusCodes2[StatusCodes2["LENGTH_REQUIRED"] = 411] = "LENGTH_REQUIRED";
+  StatusCodes2[StatusCodes2["PRECONDITION_FAILED"] = 412] = "PRECONDITION_FAILED";
+  StatusCodes2[StatusCodes2["REQUEST_TOO_LONG"] = 413] = "REQUEST_TOO_LONG";
+  StatusCodes2[StatusCodes2["REQUEST_URI_TOO_LONG"] = 414] = "REQUEST_URI_TOO_LONG";
+  StatusCodes2[StatusCodes2["UNSUPPORTED_MEDIA_TYPE"] = 415] = "UNSUPPORTED_MEDIA_TYPE";
+  StatusCodes2[StatusCodes2["REQUESTED_RANGE_NOT_SATISFIABLE"] = 416] = "REQUESTED_RANGE_NOT_SATISFIABLE";
+  StatusCodes2[StatusCodes2["EXPECTATION_FAILED"] = 417] = "EXPECTATION_FAILED";
+  StatusCodes2[StatusCodes2["IM_A_TEAPOT"] = 418] = "IM_A_TEAPOT";
+  StatusCodes2[StatusCodes2["INSUFFICIENT_SPACE_ON_RESOURCE"] = 419] = "INSUFFICIENT_SPACE_ON_RESOURCE";
+  StatusCodes2[StatusCodes2["METHOD_FAILURE"] = 420] = "METHOD_FAILURE";
+  StatusCodes2[StatusCodes2["MISDIRECTED_REQUEST"] = 421] = "MISDIRECTED_REQUEST";
+  StatusCodes2[StatusCodes2["UNPROCESSABLE_ENTITY"] = 422] = "UNPROCESSABLE_ENTITY";
+  StatusCodes2[StatusCodes2["LOCKED"] = 423] = "LOCKED";
+  StatusCodes2[StatusCodes2["FAILED_DEPENDENCY"] = 424] = "FAILED_DEPENDENCY";
+  StatusCodes2[StatusCodes2["UPGRADE_REQUIRED"] = 426] = "UPGRADE_REQUIRED";
+  StatusCodes2[StatusCodes2["PRECONDITION_REQUIRED"] = 428] = "PRECONDITION_REQUIRED";
+  StatusCodes2[StatusCodes2["TOO_MANY_REQUESTS"] = 429] = "TOO_MANY_REQUESTS";
+  StatusCodes2[StatusCodes2["REQUEST_HEADER_FIELDS_TOO_LARGE"] = 431] = "REQUEST_HEADER_FIELDS_TOO_LARGE";
+  StatusCodes2[StatusCodes2["UNAVAILABLE_FOR_LEGAL_REASONS"] = 451] = "UNAVAILABLE_FOR_LEGAL_REASONS";
+  StatusCodes2[StatusCodes2["INTERNAL_SERVER_ERROR"] = 500] = "INTERNAL_SERVER_ERROR";
+  StatusCodes2[StatusCodes2["NOT_IMPLEMENTED"] = 501] = "NOT_IMPLEMENTED";
+  StatusCodes2[StatusCodes2["BAD_GATEWAY"] = 502] = "BAD_GATEWAY";
+  StatusCodes2[StatusCodes2["SERVICE_UNAVAILABLE"] = 503] = "SERVICE_UNAVAILABLE";
+  StatusCodes2[StatusCodes2["GATEWAY_TIMEOUT"] = 504] = "GATEWAY_TIMEOUT";
+  StatusCodes2[StatusCodes2["HTTP_VERSION_NOT_SUPPORTED"] = 505] = "HTTP_VERSION_NOT_SUPPORTED";
+  StatusCodes2[StatusCodes2["INSUFFICIENT_STORAGE"] = 507] = "INSUFFICIENT_STORAGE";
+  StatusCodes2[StatusCodes2["NETWORK_AUTHENTICATION_REQUIRED"] = 511] = "NETWORK_AUTHENTICATION_REQUIRED";
+})(StatusCodes || (StatusCodes = {}));
+
+// node_modules/http-status-codes/build/es/index.js
+var __assign = function() {
+  __assign = Object.assign || function(t) {
+    for (var s, i = 1, n = arguments.length; i < n; i++) {
+      s = arguments[i];
+      for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+        t[p] = s[p];
+    }
+    return t;
+  };
+  return __assign.apply(this, arguments);
+};
+var es_default = __assign(__assign({}, legacy_default), {
+  getStatusCode,
+  getStatusText
+});
+
+// src/app/modules/ai/ai.service.ts
+import slugify2 from "slugify";
+
+// src/app/errorHelpers/ApiError.ts
+var ApiError2 = class extends Error {
+  statusCode;
+  errors;
+  constructor(statusCode, message, errors, stack = "") {
+    super(message);
+    this.statusCode = statusCode;
+    this.errors = errors ? errors : message;
+    if (stack) {
+      this.stack = stack;
+    } else {
+      Error.captureStackTrace(this, this.constructor);
+    }
+  }
+};
+var ApiError_default = ApiError2;
+
+// src/app/modules/ai/ai.service.ts
+var chatAI = async (prompt, context) => {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const baseUrl = "https://openrouter.ai/api/v1/chat/completions";
+  if (!apiKey || typeof apiKey !== "string") {
+    throw new ApiError_default(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      "AI API key is not configured properly"
+    );
+  }
+  const meals = await prisma2.meal.findMany({
+    orderBy: [{ category: { name: "asc" } }, { name: "asc" }],
+    select: {
+      name: true,
+      description: true,
+      price: true,
+      image: true,
+      isAvailable: true,
+      calories: true,
+      ingredients: true,
+      cuisine: true,
+      dietary: true,
+      mealType: true,
+      spiceLevel: true,
+      category: {
+        select: {
+          name: true,
+          slug: true
+        }
+      },
+      provider: {
+        select: {
+          shopName: true,
+          address: true,
+          isOpen: true
+        }
+      }
+    }
+  });
+  const mealCatalog = meals.map((meal) => {
+    const ingredients = meal.ingredients.length ? meal.ingredients.join(", ") : "N/A";
+    const dietary = meal.dietary.length ? meal.dietary.join(", ") : "N/A";
+    return [
+      `Name: ${meal.name}`,
+      `Category: ${meal.category?.name ?? "N/A"} (${meal.category?.slug ?? "N/A"})`,
+      `Provider: ${meal.provider?.shopName ?? "N/A"}`,
+      `Price: ${meal.price}`,
+      `Calories: ${meal.calories}`,
+      `Cuisine: ${meal.cuisine ?? "N/A"}`,
+      `Meal Type: ${meal.mealType ?? "N/A"}`,
+      `Spice Level: ${meal.spiceLevel ?? "N/A"}`,
+      `Dietary: ${dietary}`,
+      `Ingredients: ${ingredients}`,
+      `Available: ${meal.isAvailable ? "Yes" : "No"}`,
+      `Description: ${meal.description ?? "N/A"}`,
+      `Provider Open: ${meal.provider?.isOpen ? "Yes" : "No"}`
+    ].join(" | ");
+  }).join("\n");
+  const systemPrompt = [
+    `You are a helpful FoodHub assistant for a food delivery platform.`,
+    `Use the provided meal catalog as the source of truth for all meal-related questions.`,
+    `If the user asks about a meal, answer using the catalog data and do not invent meals, prices, ingredients, or availability.`,
+    `If a meal is not in the catalog, say you could not find it and suggest similar available meals if possible.`,
+    `Keep answers concise, friendly, and practical.`,
+    context ? `Additional instructions: ${context}` : null,
+    `Meal catalog:
+${mealCatalog || "No meals are available right now."}`
+  ].filter(Boolean).join("\n\n");
+  const response = await fetch(baseUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.FRONTEND_URL,
+      "X-Title": "FoodHub"
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-3.5-turbo",
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt }
+      ],
+      temperature: 0.7
+    })
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new ApiError_default(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      `AI API error: ${errorData.error.message || "Unknown error"}`
+    );
+  }
+  const data = await response.json();
+  return data.choices[0].message.content.trim();
+};
+var buildFallbackThumbnail = (topic) => {
+  const normalizedTopic = topic.trim() || "food";
+  const encodedTopic = encodeURIComponent(normalizedTopic);
+  return `https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80&query=${encodedTopic}`;
+};
+var cleanSearchText = (value) => value.toLowerCase().replace(/[^a-z\s]/g, " ").replace(
+  /\b(top|best|items|item|foods|food|blog|post|in|for|with|the|a|an|of|and)\b/g,
+  " "
+).replace(/\s+/g, " ").trim();
+var fetchUnsplashThumbnail = async (topic, title) => {
+  const accessKey = process.env.UNSPLASH_ACCESS_KEY;
+  if (!accessKey) {
+    return null;
+  }
+  const rawTitle = (title || "").trim();
+  const rawTopic = topic.trim();
+  const cleanedTitle = cleanSearchText(rawTitle);
+  const cleanedTopic = cleanSearchText(rawTopic);
+  const queryCandidates = [
+    rawTitle,
+    rawTopic,
+    cleanedTitle ? `${cleanedTitle} bangladesh food` : "",
+    cleanedTopic ? `${cleanedTopic} bangladesh food` : "",
+    "healthy bangladeshi food",
+    "bangladesh traditional food"
+  ].filter(Boolean);
+  for (const queryText of queryCandidates) {
+    const searchQuery = encodeURIComponent(queryText);
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${searchQuery}&per_page=5&orientation=landscape&content_filter=high`,
+      {
+        headers: {
+          Authorization: `Client-ID ${accessKey}`,
+          "Accept-Version": "v1"
+        }
+      }
+    );
+    if (!response.ok) {
+      continue;
+    }
+    const data = await response.json();
+    const photo = data?.results?.[0];
+    const imageUrl = photo?.urls?.regular ?? photo?.urls?.full ?? photo?.urls?.small ?? null;
+    if (imageUrl) {
+      return imageUrl;
+    }
+  }
+  return null;
+};
+var parseBlogPostContent = (rawContent, fallbackTopic) => {
+  const lines = rawContent.split(/\r?\n/).map((line) => line.trim());
+  const titleLine = lines.find((line) => /^#\s+/.test(line));
+  const title = titleLine?.replace(/^#\s+/, "").trim() || fallbackTopic;
+  const thumbnailLine = lines.find((line) => /^thumbnail\s*:/i.test(line));
+  const thumbnailMatch = thumbnailLine?.match(/https?:\/\/\S+/i);
+  const markdownImageMatch = rawContent.match(
+    /!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/i
+  );
+  const thumbnail = thumbnailMatch?.[0] ?? markdownImageMatch?.[1] ?? null;
+  const descriptionLine = lines.find((line) => /^\*.*\*$/.test(line));
+  const description = descriptionLine ? descriptionLine.replace(/^\*+|\*+$/g, "").trim() : null;
+  const content = lines.filter((line) => {
+    if (!line) return false;
+    if (line === titleLine) return false;
+    if (line === thumbnailLine) return false;
+    if (line === descriptionLine) return false;
+    return true;
+  }).join("\n").trim();
+  return {
+    title,
+    description,
+    thumbnail,
+    content: content || rawContent.trim()
+  };
+};
+var generateUniqueBlogSlug = async (title) => {
+  const baseSlug = slugify2(title, {
+    replacement: "-",
+    lower: true,
+    trim: true,
+    remove: /[*+~.()'"!:@]/g,
+    strict: true
+  });
+  let slug = baseSlug;
+  let suffix = 1;
+  while (await prisma2.blogs.findUnique({ where: { slug } })) {
+    slug = `${baseSlug}-${suffix}`;
+    suffix += 1;
+  }
+  return slug;
+};
+var blogPostGenerator = async (topic, userId) => {
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const baseUrl = "https://openrouter.ai/api/v1/chat/completions";
+  if (!apiKey || typeof apiKey !== "string") {
+    throw new ApiError_default(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      "AI API key is not configured properly"
+    );
+  }
+  if (!topic || typeof topic !== "string") {
+    throw new ApiError_default(StatusCodes.BAD_REQUEST, "Invalid blog topic provided");
+  }
+  if (!userId || typeof userId !== "string") {
+    throw new ApiError_default(StatusCodes.UNAUTHORIZED, "Unauthorized user");
+  }
+  const systemPrompt = `You are a creative food blogger for FoodHub. Write a blog post on the topic "${topic}" that is engaging, informative, and relevant to food lovers.
+
+Return the response in this exact markdown structure:
+# Title
+*Short description*
+Thumbnail: https://images.unsplash.com/... or a relevant food image URL
+
+Blog content with clear headings and paragraphs.
+
+Rules:
+- The title must be catchy and include the topic.
+- The description should be a concise summary of the blog post.
+- The thumbnail must always be included and must be a valid image URL.
+
+Then provide the blog content with clear headings and paragraphs. The content must be at least 300 words long and include useful information, tips, or insights related to the topic.`;
+  const response = await fetch(baseUrl, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "HTTP-Referer": process.env.FRONTEND_URL,
+      "X-Title": "FoodHub Blog Post Generator"
+    },
+    body: JSON.stringify({
+      model: "openai/gpt-3.5-turbo",
+      messages: [{ role: "system", content: systemPrompt }],
+      temperature: 0.7
+    })
+  });
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new ApiError_default(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      `AI API error: ${errorData.error.message || "Unknown error"}`
+    );
+  }
+  const data = await response.json();
+  const generatedContent = data.choices[0].message.content.trim();
+  const parsedBlog = parseBlogPostContent(generatedContent, topic);
+  const slug = await generateUniqueBlogSlug(parsedBlog.title);
+  const unsplashThumbnail = await fetchUnsplashThumbnail(
+    topic,
+    parsedBlog.title
+  );
+  const thumbnail = unsplashThumbnail ?? parsedBlog.thumbnail ?? buildFallbackThumbnail(parsedBlog.title || topic);
+  const savedBlog = await prisma2.blogs.create({
+    data: {
+      title: parsedBlog.title,
+      slug,
+      content: parsedBlog.content,
+      thumbnail,
+      userId
+    }
+  });
+  return {
+    blog: savedBlog,
+    generatedContent,
+    description: parsedBlog.description
+  };
+};
+var generateMealDescription = async (title, category) => {
+  if (!title || typeof title !== "string") {
+    throw new ApiError_default(StatusCodes.BAD_REQUEST, "Invalid meal title provided");
+  }
+  if (!category || typeof category !== "string") {
+    throw new ApiError_default(
+      StatusCodes.BAD_REQUEST,
+      "Invalid meal category provided"
+    );
+  }
+  const prompt = `Write a short appetizing description for a FoodHub meal named "${title}" in the "${category}" category.
+
+Rules:
+- Keep it under 300 characters.
+- Make it sound premium, fresh, and persuasive.
+- Use FoodHub's actual menu style and avoid generic filler.
+- Do not mention that you are an AI.`;
+  const context = "You are a senior food copywriter for FoodHub. You write concise, mouth-watering meal descriptions that match the restaurant menu style and help users decide quickly.";
+  const generatedDescription = await chatAI(prompt, context);
+  return generatedDescription;
+};
+var aiHealthTipSuggestion = async () => {
+  const userPreferences = "User prefers low-carb, high-protein meals and is allergic to nuts.";
+  const prompt = `Based on the following user preferences and dietary restrictions: ${userPreferences}, suggest a healthy meal option from the FoodHub menu. Provide a brief description of why this meal would be a good choice for the user.short in 100 characters.`;
+  const context = "You are a nutritionist assistant for FoodHub, helping users find meals that fit their health goals and dietary needs.";
+  return await chatAI(prompt, context);
+};
+var aiService = {
+  chatAI,
+  blogPostGenerator,
+  generateMealDescription,
+  aiHealthTipSuggestion
+};
+
+// src/app/modules/ai/ai.controller.ts
+var chatAI2 = catchAsync(async (req, res) => {
+  const { message } = req.body;
+  const result = await aiService.chatAI(message);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "AI response generated successfully",
+    data: result
+  });
+});
+var blogPostGenerator2 = catchAsync(async (req, res) => {
+  const { topic } = req.body;
+  const userId = req.user?.id;
+  if (!userId) {
+    throw new ApiError_default(StatusCodes.UNAUTHORIZED, "Unauthorized user");
+  }
+  const result = await aiService.blogPostGenerator(topic, userId);
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Blog post generated and saved successfully",
+    data: result
+  });
+});
+var generateMealDescription2 = catchAsync(
+  async (req, res) => {
+    const { title, category } = req.body;
+    const result = await aiService.generateMealDescription(title, category);
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Meal description generated and saved successfully",
+      data: result
+    });
+  }
+);
+var aiHealthTipSuggestion2 = catchAsync(
+  async (req, res) => {
+    const result = await aiService.aiHealthTipSuggestion();
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: "Health tip suggestion generated successfully",
+      data: result
+    });
+  }
+);
+var aiController = {
+  chatAI: chatAI2,
+  blogPostGenerator: blogPostGenerator2,
+  generateMealDescription: generateMealDescription2,
+  aiHealthTipSuggestion: aiHealthTipSuggestion2
+};
+
+// src/app/modules/ai/ai.route.ts
 var router7 = express2.Router();
+router7.post("/chat", aiController.chatAI);
+router7.post(
+  "/blog-post",
+  auth2(Role.ADMIN),
+  aiController.blogPostGenerator
+);
+router7.post(
+  "/meal-description",
+  auth2(Role.PROVIDER),
+  aiController.generateMealDescription
+);
+router7.get("/health-tip", aiController.aiHealthTipSuggestion);
+var aiRoutes = router7;
+
+// src/app/modules/blog/blog.route.ts
+import express3 from "express";
+
+// src/app/modules/blog/blog.service.ts
+var getAllBlogs = async (payload = {}) => {
+  const page = Number(payload.page) || 1;
+  const limit = Number(payload.limit) || 10;
+  const skip = Number(payload.skip) || (page - 1) * limit;
+  const search = typeof payload.search === "string" && payload.search.trim() && payload.search !== "undefined" && payload.search !== "null" ? payload.search.trim() : void 0;
+  const userId = typeof payload.userId === "string" && payload.userId.trim() && payload.userId !== "undefined" && payload.userId !== "null" ? payload.userId.trim() : void 0;
+  const whereCondition = buildBlogQueryCondition({
+    ...search ? { search } : {},
+    ...userId ? { userId } : {}
+  });
+  const blogPosts = await prisma.blogs.findMany({
+    take: limit,
+    skip,
+    where: whereCondition,
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true
+        }
+      }
+    },
+    orderBy: {
+      [payload.sortBy || "createdAt"]: payload.sortOrder || "desc"
+    }
+  });
+  const total = await prisma.blogs.count({
+    where: whereCondition
+  });
+  if (!blogPosts || blogPosts.length === 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "No blog posts found");
+  }
+  const totalPages = Math.ceil(total / limit);
+  return {
+    data: blogPosts,
+    pagination: {
+      total,
+      page: payload.page || 1,
+      limit: payload.limit || 10,
+      totalPages
+    }
+  };
+};
+var getAllForAdmin = async (payload = {}) => {
+  const page = Number(payload.page) || 1;
+  const limit = Number(payload.limit) || 10;
+  const skip = Number(payload.skip) || (page - 1) * limit;
+  const blogPosts = await prisma.blogs.findMany({
+    take: limit,
+    skip,
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true
+        }
+      }
+    },
+    orderBy: {
+      [payload.sortBy || "createdAt"]: payload.sortOrder || "desc"
+    }
+  });
+  const total = await prisma.blogs.count();
+  if (!blogPosts || blogPosts.length === 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "No blog posts found");
+  }
+  const totalPages = Math.ceil(total / limit);
+  return {
+    data: blogPosts,
+    pagination: {
+      total,
+      page: payload.page || 1,
+      limit: payload.limit || 10,
+      totalPages
+    }
+  };
+};
+var getBlogBySlug = async (slug) => {
+  const blog = await prisma.blogs.findUnique({
+    where: {
+      slug
+    },
+    include: {
+      user: {
+        select: {
+          name: true,
+          email: true
+        }
+      }
+    }
+  });
+  return blog;
+};
+var deleteBlogById = async (id) => {
+  const deletedBlog = await prisma.blogs.delete({
+    where: {
+      id: Number(id)
+    }
+  });
+  return deletedBlog;
+};
+var BlogService = {
+  getAllBlogs,
+  getAllForAdmin,
+  getBlogBySlug,
+  deleteBlogById
+};
+
+// src/app/modules/blog/blog.controller.ts
+var getAllBlogs2 = catchAsync(async (req, res) => {
+  const payload = req.query;
+  const { page, limit, skip, sortBy, sortOrder } = PaginationSortingHelper_default(
+    payload
+  );
+  const normalizedSearch = typeof payload.search === "string" && payload.search.trim() ? payload.search.trim() : void 0;
+  const result = await BlogService.getAllBlogs({
+    page: Number(page),
+    limit: Number(limit),
+    skip: Number(skip),
+    ...normalizedSearch ? { search: normalizedSearch } : {},
+    sortBy,
+    sortOrder
+  });
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Blogs retrieved successfully",
+    data: result.data,
+    meta: {
+      page: result.pagination.page,
+      limit: result.pagination.limit,
+      total: result.pagination.total,
+      totalPages: result.pagination.totalPages
+    }
+  });
+});
+var getAllForAdmin2 = catchAsync(async (req, res) => {
+  const payload = req.query;
+  const { page, limit, skip, sortBy, sortOrder } = PaginationSortingHelper_default(
+    payload
+  );
+  const result = await BlogService.getAllForAdmin({
+    page: Number(page),
+    limit: Number(limit),
+    skip: Number(skip),
+    sortBy,
+    sortOrder
+  });
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Blogs retrieved successfully",
+    data: result.data,
+    meta: {
+      page: result.pagination.page,
+      limit: result.pagination.limit,
+      total: result.pagination.total,
+      totalPages: result.pagination.totalPages
+    }
+  });
+});
+var getBlogBySlug2 = catchAsync(async (req, res) => {
+  const { slug } = req.params;
+  const blog = await BlogService.getBlogBySlug(slug);
+  if (!blog) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Blog post not found");
+  }
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Blog retrieved successfully",
+    data: blog
+  });
+});
+var deleteBlogById2 = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  await BlogService.deleteBlogById(Number(id));
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: "Blog deleted successfully"
+  });
+});
+var BlogController = {
+  getAllBlogs: getAllBlogs2,
+  getAllForAdmin: getAllForAdmin2,
+  getBlogBySlug: getBlogBySlug2,
+  deleteBlogById: deleteBlogById2
+};
+
+// src/app/modules/blog/blog.route.ts
+var router8 = express3.Router();
+router8.get(
+  "/",
+  BlogController.getAllBlogs
+);
+router8.get(
+  "/admin",
+  auth2(Role.ADMIN),
+  BlogController.getAllForAdmin
+);
+router8.get(
+  "/:slug",
+  BlogController.getBlogBySlug
+);
+router8.delete(
+  "/:id",
+  auth2(Role.ADMIN),
+  BlogController.deleteBlogById
+);
+var BlogRoutes = router8;
+
+// src/app/routes/index.ts
+var router9 = express4.Router();
 var moduleRoutes = [
   {
     path: "/users",
@@ -2407,18 +3352,27 @@ var moduleRoutes = [
   {
     path: "/reviews",
     routes: ReviewRoutes
+  },
+  {
+    path: "/ai",
+    routes: aiRoutes
+  },
+  {
+    path: "/blogs",
+    routes: BlogRoutes
   }
 ];
-moduleRoutes.forEach((route) => router7.use(route.path, route.routes));
-var routes_default = router7;
+moduleRoutes.forEach((route) => router9.use(route.path, route.routes));
+var routes_default = router9;
 
 // src/app.ts
-var app = express3();
+var app = express5();
 app.set("trust proxy", 1);
-app.use(express3.json({ limit: "16kb" }));
-app.use(express3.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express5.json({ limit: "16kb" }));
+app.use(express5.urlencoded({ extended: true, limit: "16kb" }));
 app.use(
   cors({
+    // origin: ["http://localhost:3000", "https://mealmate-lemon.vercel.app"],
     origin: (origin, callback) => {
       const allowed = envVars.FRONTEND_URL?.replace(/\/$/, "");
       if (!origin || origin.replace(/\/$/, "") === allowed) {
